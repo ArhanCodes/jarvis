@@ -375,7 +375,3 @@ export class MyModule implements JarvisModule {
 import { MyModule } from './modules/my-module.js';
 registry.register(new MyModule());
 ```
-
-## License
-
-MIT

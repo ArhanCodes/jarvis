@@ -2,7 +2,7 @@
 
 **Just A Rather Very Intelligent System**
 
-A local macOS system automation engine built in TypeScript. Control your entire machine through natural language commands via CLI or voice. No AI, no cloud, no API keys — just smart pattern matching and native macOS scripting.
+A local macOS system automation engine built in TypeScript. Control your entire machine through natural language commands via CLI or voice.
 
 ```
        ██╗ █████╗ ██████╗ ██╗   ██╗██╗███████╗
@@ -25,8 +25,6 @@ npm install
 # Launch JARVIS
 npm run dev
 ```
-
-That's it. You'll see the `jarvis>` prompt. Start typing commands.
 
 ## What Can It Do?
 
@@ -63,7 +61,6 @@ jarvis> shell echo "hello world"
   ✓ hello world
 ```
 
-Dangerous commands (`rm -rf /`, `sudo rm`, etc.) are automatically blocked.
 
 ### System Monitor
 
@@ -110,7 +107,6 @@ jarvis> delete ~/Desktop/junk.txt
   ✓ Moved to Trash: /Users/you/Desktop/junk.txt
 ```
 
-File search uses **Spotlight** (`mdfind`) for instant results. Delete moves files to Trash (always recoverable).
 
 | Command | What it does |
 |---------|-------------|
@@ -174,9 +170,8 @@ jarvis> stopwatch
   ✓ Stopwatch started! Type "stopwatch" again to stop.
 ```
 
-When timers fire, you get a **macOS notification** with sound + a terminal alert.
-
-Time formats supported: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a number (assumed minutes).
+- When timers fire, you get a **macOS notification** with sound + a terminal alert.
+- Time formats supported: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a number (assumed minutes).
 
 | Command | What it does |
 |---------|-------------|
@@ -206,11 +201,10 @@ jarvis> voice
   ℹ Voice mode deactivated.
 ```
 
-Voice uses Apple's **SFSpeechRecognizer** — the same on-device engine behind Siri. Fully local, free, no API keys.
+Voice uses Apple's SFSpeechRecognizer, the same on-device engine behind Siri.
 
-On first use, JARVIS auto-compiles a small Swift helper binary (one-time ~5s). macOS will prompt for **Microphone** and **Speech Recognition** permissions.
-
-**Requirements:** macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
+- On first use, JARVIS auto-compiles a small Swift helper binary (one-time ~5s). macOS will prompt for **Microphone** and **Speech Recognition** permissions.
+- Requirements: macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
 
 ## Aliases
 
@@ -266,10 +260,6 @@ User Input → Alias Expansion → Regex Parser → Executor → Module → macO
                                                           AppleScript / shell / Node.js os
 ```
 
-**No AI/LLM** is used anywhere. The parser is a two-phase regex engine:
-
-1. **Pattern matching** — each module declares regex patterns for its intents. First match wins. Confidence 1.0.
-2. **Keyword fallback** — if no pattern matches, single keywords like `battery`, `mute`, `timers` are caught. Confidence 0.6.
 
 ### Project Structure
 

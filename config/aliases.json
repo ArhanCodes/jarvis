@@ -1,0 +1,15 @@
+{
+  "chrome": "open Google Chrome",
+  "safari": "open Safari",
+  "finder": "open Finder",
+  "terminal": "open Terminal",
+  "code": "open Visual Studio Code",
+  "stats": "status",
+  "space": "disk",
+  "ip": "network",
+  "apps": "list apps",
+  "vol": "volume",
+  "dm": "dark mode",
+  "ss": "screensaver",
+  "nap": "sleep"
+}

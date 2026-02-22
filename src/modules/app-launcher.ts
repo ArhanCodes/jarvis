@@ -1,0 +1,113 @@
+import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
+import { run } from '../utils/shell.js';
+import { getRunningApps, activateApp, quitApp } from '../utils/osascript.js';
+
+export class AppLauncherModule implements JarvisModule {
+  name = 'app-launcher' as const;
+  description = 'Open, close, switch between, and list running applications';
+
+  patterns: PatternDefinition[] = [
+    {
+      intent: 'open',
+      patterns: [
+        /^open\s+(.+)/i,
+        /^launch\s+(.+)/i,
+        /^start\s+(.+)/i,
+        /^(?:can you |please )?open\s+(.+?)(?:\s+please)?$/i,
+        /^(?:fire up|bring up)\s+(.+)/i,
+      ],
+      extract: (match) => ({ appName: match[1].trim() }),
+    },
+    {
+      intent: 'close',
+      patterns: [
+        /^close\s+(.+)/i,
+        /^quit\s+(.+)/i,
+        /^kill\s+(.+)/i,
+        /^(?:shut down|exit)\s+(.+)/i,
+      ],
+      extract: (match) => ({ appName: match[1].trim() }),
+    },
+    {
+      intent: 'switch',
+      patterns: [
+        /^switch\s+to\s+(.+)/i,
+        /^go\s+to\s+(.+)/i,
+        /^focus\s+(?:on\s+)?(.+)/i,
+      ],
+      extract: (match) => ({ appName: match[1].trim() }),
+    },
+    {
+      intent: 'list',
+      patterns: [
+        /^(?:list|show|what)\s*(?:are\s+)?(?:the\s+)?(?:running\s+)?apps/i,
+        /^(?:what(?:'s| is) (?:running|open))/i,
+        /^running\s+apps/i,
+      ],
+      extract: () => ({}),
+    },
+  ];
+
+  async execute(command: ParsedCommand): Promise<CommandResult> {
+    switch (command.action) {
+      case 'open': return this.openApp(command.args.appName);
+      case 'close': return this.closeApp(command.args.appName);
+      case 'switch': return this.switchApp(command.args.appName);
+      case 'list': return this.listApps();
+      default: return { success: false, message: `Unknown action: ${command.action}` };
+    }
+  }
+
+  private async openApp(name: string): Promise<CommandResult> {
+    const result = await run(`open -a "${name}"`);
+    if (result.exitCode === 0) {
+      return { success: true, message: `Opened ${name}` };
+    }
+    // Try fuzzy match against /Applications
+    const lsResult = await run('ls /Applications');
+    const apps = lsResult.stdout.split('\n').filter(a => a.endsWith('.app'));
+    const match = apps.find(a => a.toLowerCase().includes(name.toLowerCase()));
+    if (match) {
+      const appName = match.replace('.app', '');
+      const retry = await run(`open -a "${appName}"`);
+      if (retry.exitCode === 0) {
+        return { success: true, message: `Opened ${appName}` };
+      }
+    }
+    return { success: false, message: `Could not find app "${name}"` };
+  }
+
+  private async closeApp(name: string): Promise<CommandResult> {
+    try {
+      await quitApp(name);
+      return { success: true, message: `Closed ${name}` };
+    } catch {
+      return { success: false, message: `Could not close "${name}". Is it running?` };
+    }
+  }
+
+  private async switchApp(name: string): Promise<CommandResult> {
+    try {
+      await activateApp(name);
+      return { success: true, message: `Switched to ${name}` };
+    } catch {
+      return { success: false, message: `Could not switch to "${name}". Is it running?` };
+    }
+  }
+
+  private async listApps(): Promise<CommandResult> {
+    const apps = await getRunningApps();
+    const list = apps.map(a => `    • ${a}`).join('\n');
+    return { success: true, message: `Running applications:\n${list}`, data: apps };
+  }
+
+  getHelp(): string {
+    return [
+      '  App Launcher — manage applications',
+      '    open <app>       Open an application (e.g. "open Safari")',
+      '    close <app>      Quit an application (e.g. "close Slack")',
+      '    switch to <app>  Bring app to front (e.g. "switch to Chrome")',
+      '    list apps        Show all running applications',
+    ].join('\n');
+  }
+}

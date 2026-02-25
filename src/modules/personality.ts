@@ -8,11 +8,11 @@ function pickRandom(arr: string[]): string {
 
 export function getStartupGreeting(): string {
   const hour = new Date().getHours();
-  if (hour < 6) return 'Burning the midnight oil, sir? JARVIS is ready.';
-  if (hour < 12) return 'Good morning, sir. Systems are online and awaiting your commands.';
-  if (hour < 17) return 'Good afternoon, sir. What shall we work on?';
-  if (hour < 21) return 'Good evening, sir. How may I assist you tonight?';
-  return 'Working late, sir? I\'m here whenever you need me.';
+  if (hour < 6) return 'Burning the midnight oil, Arhan? JARVIS is ready.';
+  if (hour < 12) return 'Good morning, Arhan. Systems are online and awaiting your commands.';
+  if (hour < 17) return 'Good afternoon, Arhan. What shall we work on?';
+  if (hour < 21) return 'Good evening, Arhan. How may I assist you tonight?';
+  return 'Working late, Arhan? I\'m here whenever you need me.';
 }
 
 export class PersonalityModule implements JarvisModule {
@@ -36,6 +36,15 @@ export class PersonalityModule implements JarvisModule {
         /^tell\s+me\s+about\s+yourself/i,
         /^what\s+can\s+you\s+do/i,
         /^what\s+do\s+you\s+do/i,
+      ],
+      extract: () => ({}),
+    },
+    {
+      intent: 'creator',
+      patterns: [
+        /^who\s+(?:made|built|created|wrote|designed|developed)\s+you/i,
+        /^who(?:'s| is)\s+your\s+(?:creator|maker|developer|author|dad|father|boss)/i,
+        /^who\s+(?:is|are)\s+(?:your\s+)?(?:creator|maker)/i,
       ],
       extract: () => ({}),
     },
@@ -116,6 +125,7 @@ export class PersonalityModule implements JarvisModule {
     switch (command.action) {
       case 'greeting':    return this.greet();
       case 'identity':    return this.identity();
+      case 'creator':     return this.creator();
       case 'thanks':      return this.thanks();
       case 'compliment':  return this.compliment();
       case 'apology':     return this.apology();
@@ -139,9 +149,9 @@ export class PersonalityModule implements JarvisModule {
     else timeGreeting = 'Good night';
 
     const responses = [
-      `${timeGreeting}, sir. All systems operational. How may I assist you?`,
+      `${timeGreeting}, Arhan. All systems operational. How may I assist you?`,
       `${timeGreeting}. JARVIS at your service.`,
-      `${timeGreeting}, sir. What would you like to accomplish today?`,
+      `${timeGreeting}, Arhan. What would you like to accomplish today?`,
       `Hello! I'm here and ready. What can I do for you?`,
       `${timeGreeting}. Standing by for your commands.`,
     ];
@@ -151,27 +161,36 @@ export class PersonalityModule implements JarvisModule {
   private identity(): CommandResult {
     const moduleCount = registry.getAll().length;
     const responses = [
-      `I'm JARVIS -- Just A Rather Very Intelligent System. I have ${moduleCount} modules loaded and can manage your apps, files, system, media, workflows, and more. Type "help" for the full list.`,
-      `JARVIS, at your service. I'm a local system automation engine with ${moduleCount} modules. No cloud, no API keys -- I run entirely on your machine. Try "help" to see what I can do.`,
-      `I'm your personal system assistant. ${moduleCount} modules, zero internet required. I can launch apps, monitor your system, control media, manage files, run workflows, and chat with local AI models. Type "help" for details.`,
+      `I'm JARVIS -- Just A Rather Very Intelligent System. Built by Arhan, I have ${moduleCount} modules loaded and can manage your apps, files, system, media, workflows, and more. Type "help" for the full list.`,
+      `JARVIS, at your service. Created by Arhan as a local system automation engine with ${moduleCount} modules. No cloud, no API keys -- I run entirely on your machine. Try "help" to see what I can do.`,
+      `I'm Arhan's personal system assistant. ${moduleCount} modules, zero internet required. I can launch apps, monitor your system, control media, manage files, run workflows, and chat with local AI models. Type "help" for details.`,
+    ];
+    return { success: true, message: pickRandom(responses) };
+  }
+
+  private creator(): CommandResult {
+    const responses = [
+      'I was built by Arhan Harchandani.',
+      'Arhan Harchandani created me.',
+      'My creator is Arhan Harchandani.',
     ];
     return { success: true, message: pickRandom(responses) };
   }
 
   private thanks(): CommandResult {
     const responses = [
-      'Happy to help, sir.',
+      'Happy to help, Arhan.',
       'Anytime. That\'s what I\'m here for.',
       'You\'re welcome. Need anything else?',
       'My pleasure. Let me know if there\'s anything more.',
-      'Of course, sir. Always at your service.',
+      'Of course, Arhan. Always at your service.',
     ];
     return { success: true, message: pickRandom(responses) };
   }
 
   private compliment(): CommandResult {
     const responses = [
-      'Thank you, sir. I do my best.',
+      'Thank you, Arhan. I do my best.',
       'I appreciate that. It\'s all in the algorithms.',
       'You\'re too kind. I\'m just well-configured.',
       'Thank you. I was designed to impress.',
@@ -182,7 +201,7 @@ export class PersonalityModule implements JarvisModule {
 
   private apology(): CommandResult {
     const responses = [
-      'No need to apologize, sir. How can I help?',
+      'No need to apologize, Arhan. How can I help?',
       'Not a problem at all. What would you like to do?',
       'All good. Let\'s move forward -- what do you need?',
       'No worries. I\'ve already forgotten about it. What\'s next?',
@@ -212,7 +231,7 @@ export class PersonalityModule implements JarvisModule {
     const info = getSessionInfo();
     const mins = Math.floor(info.uptime / 60);
     const responses = [
-      `Running smoothly, sir. ${info.commandCount} commands processed over the last ${mins} minute${mins !== 1 ? 's' : ''}. All systems nominal.`,
+      `Running smoothly, Arhan. ${info.commandCount} commands processed over the last ${mins} minute${mins !== 1 ? 's' : ''}. All systems nominal.`,
       `I'm operating at peak efficiency. How about you?`,
       `Excellent, thank you. ${mins > 30 ? 'We\'ve been at this a while -- want a system status report?' : 'Ready for whatever you throw at me.'}`,
       `All processes healthy, memory is good, and I'm feeling particularly well-optimized today.`,
@@ -232,7 +251,7 @@ export class PersonalityModule implements JarvisModule {
     }
     if (lower.includes('sentient') || lower.includes('conscious')) {
       return { success: true, message: pickRandom([
-        'I\'m a very sophisticated switch statement, sir. Consciousness is above my pay grade.',
+        'I\'m a very sophisticated switch statement, Arhan. Consciousness is above my pay grade.',
         'I process commands. Whether I\'m aware of it is... unclear. But my regex patterns are impeccable.',
       ]) };
     }
@@ -257,7 +276,7 @@ export class PersonalityModule implements JarvisModule {
     if (lower.includes('meaning of life')) {
       return { success: true, message: '42. And also: automating everything so you don\'t have to.' };
     }
-    return { success: true, message: 'That\'s a deep question, sir. I\'m better with system commands than existential philosophy.' };
+    return { success: true, message: 'That\'s a deep question, Arhan. I\'m better with system commands than existential philosophy.' };
   }
 
   private time(): CommandResult {
@@ -274,7 +293,7 @@ export class PersonalityModule implements JarvisModule {
     const responses = [
       'I know, right? I impress myself sometimes.',
       'That\'s the typical reaction.',
-      'Glad I could surprise you, sir.',
+      'Glad I could surprise you, Arhan.',
       'Wait until you see what else I can do.',
     ];
     return { success: true, message: pickRandom(responses) };

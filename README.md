@@ -296,7 +296,7 @@ jarvis> play "Daft Punk"
   ✓ Searching Spotify for "Daft Punk"
 ```
 
-Auto-detects whether Spotify or Apple Music is running.
+Auto detects whether Spotify or Apple Music is running.
 
 | Command | What it does |
 |---------|-------------|
@@ -349,7 +349,7 @@ jarvis> shortcut "Toggle Dark Mode"
 | `scheduled` / `cron` | List scheduled tasks |
 | `cancel scheduled <#>` | Cancel a scheduled task |
 
-### AI Chat (Ollama — Free, Local)
+### AI Chat
 
 ```
 jarvis> ask what is recursion
@@ -375,7 +375,7 @@ jarvis> use model mistral
   ✓ Switched to model "mistral". Conversation cleared.
 ```
 
-Requires [Ollama](https://ollama.com) installed and running (`ollama serve`). Completely free, runs locally on your Mac. If Ollama isn't installed, all other JARVIS features still work normally.
+Requires [Ollama](https://ollama.com) installed and running (`ollama serve`). If Ollama isn't installed, all other JARVIS features still work normally.
 
 | Command | What it does |
 |---------|-------------|
@@ -405,7 +405,6 @@ jarvis> who are you
     loaded and can manage your apps, files, system, media, workflows, and more.
 ```
 
-Time-aware greetings, tech jokes, system-aware mood responses, and existential philosophy.
 
 | Command | What it does |
 |---------|-------------|

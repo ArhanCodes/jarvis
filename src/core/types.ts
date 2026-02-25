@@ -1,4 +1,18 @@
-export type ModuleName = 'app-launcher' | 'script-runner' | 'system-monitor' | 'file-ops' | 'system-control' | 'timer';
+export type ModuleName =
+  | 'app-launcher'
+  | 'script-runner'
+  | 'system-monitor'
+  | 'file-ops'
+  | 'system-control'
+  | 'timer'
+  | 'process-manager'
+  | 'clipboard'
+  | 'window-manager'
+  | 'media-control'
+  | 'workflow'
+  | 'ai-chat'
+  | 'smart-assist'
+  | 'personality';
 
 export interface ParsedCommand {
   module: ModuleName;
@@ -12,6 +26,7 @@ export interface CommandResult {
   success: boolean;
   message: string;
   data?: unknown;
+  streamed?: boolean;
 }
 
 export interface PatternDefinition {

@@ -247,22 +247,31 @@ export class SystemControlModule implements JarvisModule {
   // ── Brightness ──
   private async setBrightness(level: number): Promise<CommandResult> {
     const clamped = Math.max(0, Math.min(100, level));
-    const fraction = clamped / 100;
-    // Uses CoreBrightness via AppleScript bridge — requires macOS Ventura+
-    const result = await run(
-      `osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to false' 2>/dev/null; ` +
-      `printf "${fraction}" | xargs -I{} osascript -e "do shell script \\"brightness {}\\""  2>/dev/null || ` +
-      `osascript -e 'tell application "System Preferences" to quit' 2>/dev/null`
-    );
-    // Fallback: use keyboard simulation
-    await run(`osascript -e 'tell application "System Events" to key code 145'`.repeat(0)); // no-op
-    return { success: true, message: `Brightness set to ${clamped}% (may require 'brightness' CLI tool: brew install brightness)` };
+    const fraction = (clamped / 100).toFixed(2);
+
+    // Try brightness CLI tool first (brew install brightness)
+    const toolCheck = await run('which brightness 2>/dev/null');
+    if (toolCheck.exitCode === 0) {
+      await run(`brightness ${fraction}`);
+      return { success: true, message: `Brightness set to ${clamped}%` };
+    }
+
+    // Fallback: simulate brightness key presses to approximate level
+    // Key code 107 = brightness down (F1), 113 = brightness up (F2)
+    const steps = Math.round(clamped / 6.25); // macOS has ~16 brightness steps
+    for (let i = 0; i < 16; i++) {
+      await run('osascript -e \'tell application "System Events" to key code 107\'');
+    }
+    for (let i = 0; i < steps; i++) {
+      await run('osascript -e \'tell application "System Events" to key code 113\'');
+    }
+    return { success: true, message: `Brightness set to ~${clamped}%` };
   }
 
   private async adjustBrightness(delta: number): Promise<CommandResult> {
-    // Use keyboard keys for brightness
-    const keyCode = delta > 0 ? 144 : 145; // F15/F14 brightness keys
-    const steps = Math.abs(Math.round(delta * 5));
+    // Key code 113 = brightness up (F2), 107 = brightness down (F1)
+    const keyCode = delta > 0 ? 113 : 107;
+    const steps = Math.max(1, Math.abs(Math.round(delta * 16)));
     for (let i = 0; i < steps; i++) {
       await run(`osascript -e 'tell application "System Events" to key code ${keyCode}'`);
     }

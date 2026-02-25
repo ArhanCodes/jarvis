@@ -10,6 +10,7 @@ export const fmt = {
   prompt: () => chalk.cyan.bold('jarvis> '),
   heading: (text: string) => chalk.white.bold.underline(`\n  ${text}\n`),
   dim: (text: string) => chalk.dim(text),
+  suggestion: (text: string) => chalk.yellow(`    - ${text}`),
   box: (lines: string[]) => {
     const stripped = lines.map(l => l.replace(/\x1b\[[0-9;]*m/g, ''));
     const maxLen = Math.max(...stripped.map(l => l.length));

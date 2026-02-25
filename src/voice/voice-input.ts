@@ -10,7 +10,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export interface VoiceInputProvider {
   isAvailable(): Promise<boolean>;
   listen(durationMs?: number): Promise<string>;
-  startContinuous(onCommand: (text: string) => void): Promise<void>;
+  startContinuous(onCommand: (text: string) => Promise<void> | void): Promise<void>;
   stop(): void;
 }
 
@@ -130,7 +130,7 @@ export class MacOSVoiceInput implements VoiceInputProvider {
     return result.stdout.trim();
   }
 
-  async startContinuous(onCommand: (text: string) => void): Promise<void> {
+  async startContinuous(onCommand: (text: string) => Promise<void> | void): Promise<void> {
     const ready = await this.ensureHelper();
     if (!ready) throw new Error('Voice helper not available');
 
@@ -138,29 +138,25 @@ export class MacOSVoiceInput implements VoiceInputProvider {
     console.log(fmt.banner('\n  🎤 Voice mode activated — speak your commands!'));
     console.log(fmt.info('Say "stop listening" or press Ctrl+C to exit voice mode.\n'));
 
-    const listenLoop = async () => {
-      while (this.isListening) {
-        try {
-          const text = await this.listen(5000);
-          if (!text) continue;
+    while (this.isListening) {
+      try {
+        const text = await this.listen(5000);
+        if (!text) continue;
 
-          const lower = text.toLowerCase().trim();
-          if (lower === 'stop listening' || lower === 'stop' || lower === 'exit voice') {
-            this.isListening = false;
-            console.log(fmt.info('Voice mode deactivated.'));
-            return;
-          }
-
-          console.log(fmt.dim(`  🗣  Heard: "${text}"`));
-          onCommand(text);
-        } catch {
-          // Brief pause on error then retry
-          await new Promise(r => setTimeout(r, 500));
+        const lower = text.toLowerCase().trim();
+        if (lower === 'stop listening' || lower === 'stop' || lower === 'exit voice') {
+          this.isListening = false;
+          console.log(fmt.info('Voice mode deactivated.'));
+          return;
         }
-      }
-    };
 
-    listenLoop();
+        console.log(fmt.dim(`  🗣  Heard: "${text}"`));
+        await onCommand(text);
+      } catch {
+        // Brief pause on error then retry
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
   }
 
   stop(): void {
@@ -178,7 +174,7 @@ export class NoopVoiceInput implements VoiceInputProvider {
   async listen(): Promise<string> {
     throw new Error('Voice input is not configured.');
   }
-  async startContinuous(): Promise<void> {
+  async startContinuous(_onCommand: (text: string) => Promise<void> | void): Promise<void> {
     throw new Error('Voice input is not configured.');
   }
   stop(): void { /* noop */ }

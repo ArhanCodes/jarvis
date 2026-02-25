@@ -1,6 +1,6 @@
 {
   "name": "jarvis",
-  "version": "1.0.0",
+  "version": "2.1.0",
   "description": "JARVIS - Local macOS system automation engine",
   "type": "module",
   "main": "dist/src/index.js",

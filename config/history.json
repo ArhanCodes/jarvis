@@ -1,0 +1,77 @@
+[
+  {
+    "command": "hello",
+    "timestamp": 1772006897533,
+    "success": true
+  },
+  {
+    "command": "who are you",
+    "timestamp": 1772006897544,
+    "success": true
+  },
+  {
+    "command": "tell me a joke",
+    "timestamp": 1772006897547,
+    "success": true
+  },
+  {
+    "command": "how are you",
+    "timestamp": 1772006897549,
+    "success": true
+  },
+  {
+    "command": "what time is it",
+    "timestamp": 1772006897550,
+    "success": true
+  },
+  {
+    "command": "models",
+    "timestamp": 1772006897663,
+    "success": false
+  },
+  {
+    "command": "ai status",
+    "timestamp": 1772006897664,
+    "success": false
+  },
+  {
+    "command": "what can I do",
+    "timestamp": 1772006897665,
+    "success": true
+  },
+  {
+    "command": "top commands",
+    "timestamp": 1772006897668,
+    "success": true
+  },
+  {
+    "command": "hello",
+    "timestamp": 1772015833939,
+    "success": true
+  },
+  {
+    "command": "tell me a joke",
+    "timestamp": 1772015842018,
+    "success": true
+  },
+  {
+    "command": "tell me a joke",
+    "timestamp": 1772015849512,
+    "success": true
+  },
+  {
+    "command": "who are you",
+    "timestamp": 1772015858075,
+    "success": true
+  },
+  {
+    "command": "ask who is iron man",
+    "timestamp": 1772015996483,
+    "success": false
+  },
+  {
+    "command": "who are you",
+    "timestamp": 1772016927376,
+    "success": true
+  }
+]

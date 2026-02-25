@@ -13,7 +13,11 @@ const DANGEROUS_PATTERNS = [
   /dd\s+if=/,
   />\s*\/dev\/sd/,
   /:\(\)\{.*\|.*&\s*\};/,
+  /rm\s+-rf?\s+~\s*$/,
   /rm\s+-rf?\s+~\//,
+  /chmod\s+-R\s+777\s+\//,
+  />\s*\/etc\//,
+  /launchctl\s+unload/,
 ];
 
 export function isSafe(command: string): boolean {
@@ -32,10 +36,15 @@ export async function run(
       shell: '/bin/zsh',
     };
     exec(command, opts, (error, stdout, stderr) => {
+      let exitCode = 0;
+      if (error) {
+        const errWithCode = error as NodeJS.ErrnoException & { status?: number };
+        exitCode = errWithCode.status ?? (typeof errWithCode.code === 'number' ? errWithCode.code : 1);
+      }
       resolve({
         stdout: (stdout ?? '').toString().trim(),
         stderr: (stderr ?? '').toString().trim(),
-        exitCode: error ? (error as NodeJS.ErrnoException).code ? 1 : 1 : 0,
+        exitCode,
       });
     });
   });

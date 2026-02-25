@@ -2,7 +2,7 @@
 
 **Just A Rather Very Intelligent System**
 
-A local macOS system automation engine built in TypeScript. Control your entire machine through natural language commands via CLI or voice + ptional local AI via Ollama.
+A local macOS system automation engine built in TypeScript. Control your entire machine through natural language commands via CLI or voice + optional local AI via Ollama.
 
 ```
        ██╗ █████╗ ██████╗ ██╗   ██╗██╗███████╗

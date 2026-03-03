@@ -28,7 +28,7 @@ npm run dev
 | Category | Capabilities |
 |----------|-------------|
 | **14 modules** | Apps, scripts, system info, files, system control, timers, processes, clipboard, windows, media, workflows, AI chat, personality, smart assist |
-| **Local AI chat** | Chat with Ollama models (Llama 3, Mistral, etc.) — free, no API keys |
+| **Local AI chat** | Chat with Ollama models (Llama 3, Mistral, etc)  |
 | **File AI** | Summarize or explain any file with local LLMs |
 | **JARVIS personality** | Greetings, jokes, conversation, time-aware responses |
 | **Smart suggestions** | NLU fallback, typo-tolerant suggestions, usage analytics |
@@ -83,7 +83,7 @@ jarvis> run ls -la
   ✓ (full directory listing)
 ```
 
-Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked.
+Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked
 
 | Command | What it does |
 |---------|-------------|
@@ -133,7 +133,7 @@ jarvis> delete ~/Desktop/junk.txt
   ✓ Moved to Trash: /Users/you/Desktop/junk.txt
 ```
 
-File search uses **Spotlight** (`mdfind`) for instant results. Delete moves files to Trash (always recoverable).
+File search uses Spotlight (`mdfind`) for instant results. Delete moves files to Trash
 
 | Command | What it does |
 |---------|-------------|
@@ -375,7 +375,7 @@ jarvis> use model mistral
   ✓ Switched to model "mistral". Conversation cleared.
 ```
 
-Requires [Ollama](https://ollama.com) installed and running (`ollama serve`). If Ollama isn't installed, all other JARVIS features still work normally.
+Requires [Ollama](https://ollama.com) installed and running (`ollama serve`). If Ollama isn't installed, all other features still work normally
 
 | Command | What it does |
 |---------|-------------|
@@ -444,8 +444,8 @@ jarvis> top commands
 
 | Command | What it does |
 |---------|-------------|
-| `what can I do` / `suggestions` | Context-aware command suggestions |
-| `top commands` / `frequent commands` | Most-used command analytics |
+| `what can I do` / `suggestions` | Context aware command suggestions |
+| `top commands` / `frequent commands` | Most used command analytics |
 | *(automatic)* | NLU fallback for natural language phrases |
 | *(automatic)* | Smart suggestions when commands aren't recognized |
 
@@ -616,7 +616,7 @@ The core parser uses **no AI/LLM** — it's a seven-phase engine:
 6. **NLU mapping** — natural language phrases mapped to existing commands (confidence 0.5)
 7. **Smart suggestions** — if nothing matches, suggest closest commands
 
-AI features (Ollama chat, summarize, explain) are **optional** — they use locally-running LLMs with zero cloud/API dependencies.
+AI features (Ollama chat, summarize, explain) are optional — they use locally-running LLMs with zero cloud/API dependencies
 
 ### Project Structure
 

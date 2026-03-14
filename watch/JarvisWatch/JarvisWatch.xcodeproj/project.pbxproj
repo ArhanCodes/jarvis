@@ -1,0 +1,663 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10001 /* JarvisWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20001 /* JarvisWatchApp.swift */; };
+		A10002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20002 /* ContentView.swift */; };
+		A10003 /* WatchConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20003 /* WatchConnectionManager.swift */; };
+		A10004 /* SpeechRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20004 /* SpeechRecognizer.swift */; };
+		A10005 /* AudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20005 /* AudioPlayer.swift */; };
+		A10006 /* ArcReactorWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20006 /* ArcReactorWatchView.swift */; };
+		A10007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20007 /* Assets.xcassets */; };
+		B10001 /* JarvisCompanionApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20001 /* JarvisCompanionApp.swift */; };
+		B10002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20002 /* ContentView.swift */; };
+		B10003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B20003 /* Assets.xcassets */; };
+		B10004 /* JarvisWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = A30001 /* JarvisWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		B10005 /* iOSConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20004 /* iOSConnectionManager.swift */; };
+		B10006 /* iOSAudioPlayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20006 /* iOSAudioPlayer.swift */; };
+		B10007 /* EnergyOrbView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20007 /* EnergyOrbView.swift */; };
+		B10008 /* WatchRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20008 /* WatchRelay.swift */; };
+		W10001 /* JarvisWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = W20001 /* JarvisWidget.swift */; };
+		W10002 /* JarvisWidgetBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = W20002 /* JarvisWidgetBundle.swift */; };
+		W10003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = W20003 /* Assets.xcassets */; };
+		W10004 /* JarvisWidgetExtension.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = W30001 /* JarvisWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		W10005 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = W20004 /* WidgetKit.framework */; };
+		W10006 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = W20005 /* SwiftUI.framework */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B40001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A60001;
+			remoteInfo = JarvisWatch;
+		};
+		W40002 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A90001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = W60001;
+			remoteInfo = JarvisWidgetExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B50001 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				B10004 /* JarvisWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		W50003 /* Embed App Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				W10004 /* JarvisWidgetExtension.appex in Embed App Extensions */,
+			);
+			name = "Embed App Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		A20001 /* JarvisWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JarvisWatchApp.swift; sourceTree = "<group>"; };
+		A20002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A20003 /* WatchConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchConnectionManager.swift; sourceTree = "<group>"; };
+		A20004 /* SpeechRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechRecognizer.swift; sourceTree = "<group>"; };
+		A20005 /* AudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayer.swift; sourceTree = "<group>"; };
+		A20006 /* ArcReactorWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArcReactorWatchView.swift; sourceTree = "<group>"; };
+		A20007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20008 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A30001 /* JarvisWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JarvisWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B20001 /* JarvisCompanionApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JarvisCompanionApp.swift; sourceTree = "<group>"; };
+		B20002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B20003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B20004 /* iOSConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSConnectionManager.swift; sourceTree = "<group>"; };
+		B20006 /* iOSAudioPlayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iOSAudioPlayer.swift; sourceTree = "<group>"; };
+		B20007 /* EnergyOrbView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnergyOrbView.swift; sourceTree = "<group>"; };
+		B20008 /* WatchRelay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchRelay.swift; sourceTree = "<group>"; };
+		B20005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B30001 /* JarvisCompanion.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = JarvisCompanion.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		W20001 /* JarvisWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JarvisWidget.swift; sourceTree = "<group>"; };
+		W20002 /* JarvisWidgetBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = JarvisWidgetBundle.swift; sourceTree = "<group>"; };
+		W20003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		W20004 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		W20005 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		W30001 /* JarvisWidgetExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = JarvisWidgetExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A40001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B40002 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		W40001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				W10005 /* WidgetKit.framework in Frameworks */,
+				W10006 /* SwiftUI.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A50001 = {
+			isa = PBXGroup;
+			children = (
+				B50002 /* JarvisCompanion */,
+				A50002 /* JarvisWatch */,
+				W50001 /* JarvisWidget */,
+				A50003 /* Products */,
+				W50004 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A50002 /* JarvisWatch */ = {
+			isa = PBXGroup;
+			children = (
+				A20001 /* JarvisWatchApp.swift */,
+				A20002 /* ContentView.swift */,
+				A20006 /* ArcReactorWatchView.swift */,
+				A20003 /* WatchConnectionManager.swift */,
+				A20004 /* SpeechRecognizer.swift */,
+				A20005 /* AudioPlayer.swift */,
+				A20007 /* Assets.xcassets */,
+				A20008 /* Info.plist */,
+			);
+			path = JarvisWatch;
+			sourceTree = "<group>";
+		};
+		A50003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B30001 /* JarvisCompanion.app */,
+				A30001 /* JarvisWatch.app */,
+				W30001 /* JarvisWidgetExtension.appex */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		B50002 /* JarvisCompanion */ = {
+			isa = PBXGroup;
+			children = (
+				B20001 /* JarvisCompanionApp.swift */,
+				B20002 /* ContentView.swift */,
+				B20004 /* iOSConnectionManager.swift */,
+				B20006 /* iOSAudioPlayer.swift */,
+				B20007 /* EnergyOrbView.swift */,
+				B20008 /* WatchRelay.swift */,
+				B20003 /* Assets.xcassets */,
+				B20005 /* Info.plist */,
+			);
+			path = JarvisCompanion;
+			sourceTree = "<group>";
+		};
+		W50001 /* JarvisWidget */ = {
+			isa = PBXGroup;
+			children = (
+				W20001 /* JarvisWidget.swift */,
+				W20002 /* JarvisWidgetBundle.swift */,
+				W20003 /* Assets.xcassets */,
+			);
+			path = JarvisWidget;
+			sourceTree = "<group>";
+		};
+		W50004 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				W20004 /* WidgetKit.framework */,
+				W20005 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A60001 /* JarvisWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A80001 /* Build configuration list for PBXNativeTarget "JarvisWatch" */;
+			buildPhases = (
+				A70001 /* Sources */,
+				A40001 /* Frameworks */,
+				A70002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JarvisWatch;
+			productName = JarvisWatch;
+			productReference = A30001 /* JarvisWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B60001 /* JarvisCompanion */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B80001 /* Build configuration list for PBXNativeTarget "JarvisCompanion" */;
+			buildPhases = (
+				B70001 /* Sources */,
+				B40002 /* Frameworks */,
+				B70002 /* Resources */,
+				B50001 /* Embed Watch Content */,
+				W50003 /* Embed App Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				B40003 /* PBXTargetDependency */,
+				W40003 /* PBXTargetDependency */,
+			);
+			name = JarvisCompanion;
+			productName = JarvisCompanion;
+			productReference = B30001 /* JarvisCompanion.app */;
+			productType = "com.apple.product-type.application";
+		};
+		W60001 /* JarvisWidgetExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = W80001 /* Build configuration list for PBXNativeTarget "JarvisWidgetExtension" */;
+			buildPhases = (
+				W70001 /* Sources */,
+				W40001 /* Frameworks */,
+				W70002 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = JarvisWidgetExtension;
+			productName = JarvisWidgetExtension;
+			productReference = W30001 /* JarvisWidgetExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A90001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1540;
+				LastUpgradeCheck = 1540;
+				TargetAttributes = {
+					A60001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					B60001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+					W60001 = {
+						CreatedOnToolsVersion = 15.4;
+					};
+				};
+			};
+			buildConfigurationList = A80003 /* Build configuration list for PBXProject "JarvisWatch" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A50001;
+			productRefGroup = A50003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B60001 /* JarvisCompanion */,
+				A60001 /* JarvisWatch */,
+				W60001 /* JarvisWidgetExtension */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A70002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10007 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B70002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		W70002 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				W10003 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A70001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10001 /* JarvisWatchApp.swift in Sources */,
+				A10002 /* ContentView.swift in Sources */,
+				A10003 /* WatchConnectionManager.swift in Sources */,
+				A10004 /* SpeechRecognizer.swift in Sources */,
+				A10005 /* AudioPlayer.swift in Sources */,
+				A10006 /* ArcReactorWatchView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		B70001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B10001 /* JarvisCompanionApp.swift in Sources */,
+				B10002 /* ContentView.swift in Sources */,
+				B10005 /* iOSConnectionManager.swift in Sources */,
+				B10006 /* iOSAudioPlayer.swift in Sources */,
+				B10007 /* EnergyOrbView.swift in Sources */,
+				B10008 /* WatchRelay.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		W70001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				W10001 /* JarvisWidget.swift in Sources */,
+				W10002 /* JarvisWidgetBundle.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B40003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A60001 /* JarvisWatch */;
+			targetProxy = B40001 /* PBXContainerItemProxy */;
+		};
+		W40003 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = W60001 /* JarvisWidgetExtension */;
+			targetProxy = W40002 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AA0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "$(inherited) DEBUG";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MTL_FAST_MATH = YES;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA0003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisWatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JARVIS;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		AA0004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisWatch/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JARVIS;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch.watchkitapp;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "watchos watchsimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
+		};
+		BB0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JARVIS;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "JARVIS needs microphone access for voice commands";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "JARVIS uses speech recognition to process your voice commands";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		BB0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisCompanion/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = JARVIS;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "JARVIS needs microphone access for voice commands";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "JARVIS uses speech recognition to process your voice commands";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = NO;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		WW0001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "JARVIS Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		WW0002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 20;
+				DEVELOPMENT_TEAM = 5VBKUL56N3;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = JarvisWidget/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "JARVIS Widget";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jarvis.watch.widget;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A80001 /* Build configuration list for PBXNativeTarget "JarvisWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0003 /* Debug */,
+				AA0004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A80003 /* Build configuration list for PBXProject "JarvisWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA0001 /* Debug */,
+				AA0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B80001 /* Build configuration list for PBXNativeTarget "JarvisCompanion" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB0001 /* Debug */,
+				BB0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		W80001 /* Build configuration list for PBXNativeTarget "JarvisWidgetExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WW0001 /* Debug */,
+				WW0002 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A90001 /* Project object */;
+}

@@ -1,0 +1,36 @@
+node_modules/
+dist/
+*.js.map
+.DS_Store
+.voice/
+
+# Config files with secrets/personal data
+config/voice.json
+config/llm-config.json
+config/aim.json
+config/.browser-data/
+config/memory.json
+config/history.json
+config/conversations.json
+
+# Deployment (contains VPS credentials)
+deploy/
+
+# Claude Code artifacts
+.claude/
+
+# Swift build artifacts
+watch/JarvisWatch/build/
+watch/JarvisWatch/JarvisCompanion/.build/
+watch/JarvisWatch/*.xcodeproj/xcuserdata/
+*.xcuserstate
+*.mobileprovision
+
+# Menubar binaries (compiled locally)
+menubar/jarvis-menubar
+menubar/JarvisMenubar
+
+# Miscellaneous
+plan.md
+*.docx
+*.xcuserstate

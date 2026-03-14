@@ -1,0 +1,31 @@
+{
+  "name": "jarvis",
+  "version": "2.1.0",
+  "description": "JARVIS - Local macOS system automation engine",
+  "type": "module",
+  "main": "dist/src/index.js",
+  "bin": {
+    "jarvis": "./dist/bin/jarvis.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/bin/jarvis.js",
+    "dev": "tsx bin/jarvis.ts"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.38.1",
+    "@types/ws": "^8.18.1",
+    "chalk": "^5.4.1",
+    "dotenv": "^17.3.1",
+    "playwright": "^1.58.2",
+    "ws": "^8.19.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

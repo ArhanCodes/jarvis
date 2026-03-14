@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIconName</key>
+	<string>AppIcon</string>
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>com.jarvis.watch</string>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>JARVIS needs microphone access to hear your voice commands.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>JARVIS uses speech recognition to understand your commands.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>JARVIS connects to your Mac on the local network to process commands.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_jarvis._tcp</string>
+	</array>
+</dict>
+</plist>

@@ -16,8 +16,8 @@ A macOS AI assistant with voice control, screen awareness, browser automation, a
 ## Quick Start
 
 ```bash
-cd ~/Downloads/jarvis
-npm install
+git clone https://github.com/ArhanCodes/jarvis.git
+cd jarvis && npm install
 npm run dev
 ```
 

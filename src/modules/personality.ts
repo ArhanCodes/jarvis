@@ -32,8 +32,8 @@ export class PersonalityModule implements JarvisModule {
         /^what(?:'?s|\s+is)\s+up(?:\s+.*)?$/i,
         // "what's good", "what's happening", "what's going on"
         /^what(?:'?s|\s+is)\s+(?:good|happening|going\s+on|new|crackin|poppin|the\s+move)(?:\s+.*)?$/i,
-        // "good morning/afternoon/evening" with optional trailing
-        /^good\s+(?:morning|afternoon|evening)(?:\s+.*)?$/i,
+        // "good afternoon/evening" — morning is handled by smart-routines
+        /^good\s+(?:afternoon|evening)(?:\s+.*)?$/i,
         // "greetings", "salutations"
         /^(?:greetings|salutations)(?:\s+.*)?$/i,
       ],

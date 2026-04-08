@@ -5,6 +5,7 @@ struct JarvisCompanionApp: App {
     init() {
         // Start the WatchConnectivity relay so the watch can send commands through us
         WatchRelay.shared.start()
+        iOSConnectionManager.shared.start()
     }
 
     var body: some Scene {

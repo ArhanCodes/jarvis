@@ -1,6 +1,7 @@
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { run } from '../utils/shell.js';
 import { getRunningApps, activateApp, quitApp } from '../utils/osascript.js';
+import { spawn } from 'child_process';
 
 export class AppLauncherModule implements JarvisModule {
   name = 'app-launcher' as const;
@@ -16,6 +17,7 @@ export class AppLauncherModule implements JarvisModule {
         /^start\s+(.+)/i,
         /^(?:can you |please )?open\s+(?!https?:\/\/)(?!\S+\.(?:com|org|net|io|dev|ai|co|me|app|edu|gov)\b)(.+?)(?:\s+please)?$/i,
         /^(?:fire up|bring up)\s+(.+)/i,
+        /^(planner)$/i,
       ],
       extract: (match) => ({ appName: match[1].trim() }),
     },
@@ -59,7 +61,46 @@ export class AppLauncherModule implements JarvisModule {
     }
   }
 
+  // Aliases: keyword → path or app name
+  private readonly aliases: Record<string, string> = {};
+
+  // Dev projects: keyword → { dir, command, url }
+  private readonly devProjects: Record<string, { dir: string; cmd: string; url: string }> = {
+    'planner': {
+      dir: '/Users/arhanharchandani/Downloads/everyday',
+      cmd: 'npm run dev',
+      url: 'http://localhost:3000',
+    },
+  };
+
   private async openApp(name: string): Promise<CommandResult> {
+    // Check dev projects first (e.g. "open planner" → npm run dev + open browser)
+    const project = this.devProjects[name.toLowerCase()];
+    if (project) {
+      // Start dev server in background (detached so it survives independently)
+      const child = spawn('npm', ['run', 'dev'], {
+        cwd: project.dir,
+        detached: true,
+        stdio: 'ignore',
+        shell: true,
+      });
+      child.unref();
+      // Wait for server to start, then open browser
+      await new Promise(resolve => setTimeout(resolve, 4000));
+      await run(`open "${project.url}"`);
+      return { success: true, message: `Started ${name} dev server and opened ${project.url}` };
+    }
+
+    // Check aliases
+    const alias = this.aliases[name.toLowerCase()];
+    if (alias) {
+      const result = await run(`open "${alias}"`);
+      if (result.exitCode === 0) {
+        return { success: true, message: `Opened ${name}` };
+      }
+      return { success: false, message: `Could not open ${name} (${alias})` };
+    }
+
     const result = await run(`open -a "${name}"`);
     if (result.exitCode === 0) {
       return { success: true, message: `Opened ${name}` };

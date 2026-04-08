@@ -1,0 +1,6 @@
+{
+  "sections": ["weather", "calendar", "email", "news", "system", "insights"],
+  "location": "auto",
+  "autoTime": null,
+  "quickSections": ["weather", "calendar", "email"]
+}

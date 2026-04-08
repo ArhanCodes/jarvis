@@ -157,8 +157,11 @@ export class SystemMonitorModule implements JarvisModule {
   }
 
   private async getNetwork(): Promise<CommandResult> {
-    const ipResult = await run("ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || echo 'Not connected'");
-    const wifiResult = await run("networksetup -getairportnetwork en0 2>/dev/null || echo 'No WiFi'");
+    // Find the actual WiFi interface dynamically (not always en0 on newer Macs)
+    const ipResult = await run("ifconfig | grep 'inet ' | grep -v 127.0.0.1 | head -1 | awk '{print $2}' 2>/dev/null || echo 'Not connected'");
+    const wifiIfResult = await run("networksetup -listallhardwareports | awk '/Wi-Fi/{getline; print $2}' 2>/dev/null || echo 'en0'");
+    const wifiIf = wifiIfResult.stdout?.trim() || 'en0';
+    const wifiResult = await run(`networksetup -getairportnetwork ${wifiIf} 2>/dev/null || echo 'No WiFi'`);
 
     const ip = ipResult.stdout || 'Not connected';
     const wifiLine = wifiResult.stdout;

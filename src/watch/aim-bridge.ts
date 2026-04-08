@@ -12,6 +12,9 @@
 
 import WebSocket from 'ws';
 import { conversationEngine } from '../core/conversation-engine.js';
+import { parse, splitChainedCommands } from '../core/parser.js';
+import { execute } from '../core/executor.js';
+import { tryNaturalLanguageMapping } from '../modules/smart-assist.js';
 import { readFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -21,6 +24,8 @@ import { promisify } from 'util';
 import { IS_MAC } from '../utils/platform.js';
 import { setMacProxySender, handleMacProxyResult } from '../utils/mac-proxy.js';
 import { generateTTSAudio } from '../utils/voice-output.js';
+import { getBreachStatus, runManualCheck } from '../utils/breach-monitor.js';
+import { getNetworkDevices, trustDevice, runManualScan } from '../utils/network-guardian.js';
 
 const execAsync = promisify(exec);
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -156,6 +161,11 @@ let reconnectTimer: NodeJS.Timeout | null = null;
 let pingTimer: NodeJS.Timeout | null = null;
 let aimConnected = false;
 
+// ── Command abort tracking ──
+// When a new command arrives while one is still being processed,
+// we abort the old one so TTS stops immediately.
+let currentCommandAbort: AbortController | null = null;
+
 function sendToAIM(msg: Record<string, unknown>): void {
   if (aimWs && aimWs.readyState === WebSocket.OPEN) {
     aimWs.send(JSON.stringify(msg));
@@ -171,9 +181,45 @@ async function handleAIMCommand(msg: any): Promise<void> {
 
   console.log(`  [aim] Remote command: "${text}" → respond to ${respondTo} (noAudio=${noAudio}, playOnMac=${playOnMac})`);
 
+  // Abort any previous command that's still generating TTS
+  if (currentCommandAbort) {
+    console.log(`  [aim] Aborting previous command for new one`);
+    currentCommandAbort.abort();
+  }
+  const abortController = new AbortController();
+  currentCommandAbort = abortController;
+
   // Broadcast processing status
   sendToAIM({ type: 'status', state: 'processing', lastCommand: text });
 
+  // ── Step 1: Try the normal command pipeline (parse → execute) ──
+  const commands = splitChainedCommands(text);
+  if (commands.length > 1) {
+    // Handle chained commands
+    const results: string[] = [];
+    for (const cmd of commands) {
+      const r = await tryExecuteCommand(cmd);
+      if (r) results.push(r);
+    }
+    if (results.length > 0) {
+      const combined = results.join('. ');
+      sendToAIM({ type: 'token', text: combined, to: respondTo, requestId });
+      await sendVoiceResponse(combined, respondTo, requestId, noAudio, playOnMac);
+      sendToAIM({ type: 'status', state: 'idle' });
+      return;
+    }
+  }
+
+  // Single command
+  const commandResult = await tryExecuteCommand(text);
+  if (commandResult) {
+    sendToAIM({ type: 'token', text: commandResult, to: respondTo, requestId });
+    await sendVoiceResponse(commandResult, respondTo, requestId, noAudio, playOnMac);
+    sendToAIM({ type: 'status', state: 'idle' });
+    return;
+  }
+
+  // ── Step 2: No module matched — fall back to conversation engine ──
   const sentenceQueue: string[] = [];
   let buffer = '';
   let streamDone = false;
@@ -181,7 +227,6 @@ async function handleAIMCommand(msg: any): Promise<void> {
   const streamPromise = conversationEngine.processUnmatched(text, {
     voiceMode: true,
     onToken: (token: string) => {
-      // Send token to the requesting device
       sendToAIM({ type: 'token', text: token, to: respondTo, requestId });
 
       buffer += token;
@@ -202,10 +247,19 @@ async function handleAIMCommand(msg: any): Promise<void> {
         buffer = '';
       }
     },
+    onCommandStart: (cmd: string) => {
+      console.log(`  [aim] AI executing: ${cmd}`);
+    },
+    onCommandResult: (_cmd: string, result: any) => {
+      if (result.success) {
+        console.log(`  [aim] Action result: ${result.message}`);
+      }
+    },
   }).then(() => {
     if (buffer.trim()) sentenceQueue.push(buffer.trim());
     streamDone = true;
-  }).catch(() => {
+  }).catch((err) => {
+    console.log(`  [aim] Conversation error: ${(err as Error).message}`);
     streamDone = true;
   });
 
@@ -218,18 +272,25 @@ async function handleAIMCommand(msg: any): Promise<void> {
   sendToAIM({ type: 'status', state: 'speaking' });
 
   while (!streamDone || sentenceQueue.length > 0) {
+    // Check if this command was aborted (user started a new one)
+    if (abortController.signal.aborted) {
+      console.log(`  [aim] Command aborted, stopping TTS`);
+      sentenceQueue.length = 0;
+      break;
+    }
+
     if (sentenceQueue.length > 0) {
       const sentence = sentenceQueue.shift()!
         .replace(/\[.*?\]/g, '')
         .replace(/\bjarvis\b[,.]?\s*/gi, '')
         .trim();
 
-      if (sentence) {
+      if (sentence && !abortController.signal.aborted) {
         if (playOnMac) {
           await playAudioOnMac(sentence);
         } else {
           const audioBuf = await generateTTSAudio(sentence);
-          if (audioBuf) {
+          if (audioBuf && !abortController.signal.aborted) {
             sendToAIM({ type: 'audio', data: audioBuf.toString('base64'), to: respondTo, requestId });
           }
         }
@@ -239,12 +300,75 @@ async function handleAIMCommand(msg: any): Promise<void> {
     }
   }
 
-  if (!playOnMac) {
+  if (!playOnMac && !abortController.signal.aborted) {
     sendToAIM({ type: 'audioEnd', to: respondTo, requestId });
   }
 
-  sendToAIM({ type: 'status', state: 'idle' });
+  // Only set idle if we're still the active command
+  if (currentCommandAbort === abortController) {
+    sendToAIM({ type: 'status', state: 'idle' });
+    currentCommandAbort = null;
+  }
   await streamPromise.catch(() => {});
+}
+
+/**
+ * Try to parse and execute a command through the module system.
+ * Returns the result message if a module handled it, or null if nothing matched.
+ */
+async function tryExecuteCommand(text: string): Promise<string | null> {
+  // Built-in commands (not module-based)
+  if (/^breach\s+status$/i.test(text)) return getBreachStatus();
+  if (/^breach\s+(check|scan)$/i.test(text)) return await runManualCheck();
+  if (/^network\s+(devices|status)$/i.test(text)) return getNetworkDevices();
+  if (/^network\s+scan$/i.test(text) || /unknown\s+devices?/i.test(text) || /new\s+devices?/i.test(text)
+      || /who'?s?\s+on\s+(my\s+)?(net|wifi)/i.test(text) || /any\s+devices?/i.test(text)
+      || /scan\s+(my\s+)?network/i.test(text) || /network\s+intruders?/i.test(text)) return await runManualScan();
+  const trustMatch = text.match(/^trust\s+device\s+([0-9a-f:]+)(?:\s+(.+))?$/i);
+  if (trustMatch) return trustDevice(trustMatch[1], trustMatch[2]);
+
+  let parsed = await parse(text);
+
+  // NLU fallback
+  if (!parsed) {
+    parsed = tryNaturalLanguageMapping(text);
+  }
+
+  if (!parsed) return null;
+
+  try {
+    const result = await execute(parsed);
+    console.log(`  [aim] Command executed: "${text}" → ${result.success ? '✓' : '✗'} ${result.message}`);
+    return result.voiceMessage || result.message;
+  } catch (err) {
+    console.log(`  [aim] Command error: ${(err as Error).message}`);
+    return `Error: ${(err as Error).message}`;
+  }
+}
+
+/**
+ * Send a voice response via TTS to the requesting device.
+ */
+async function sendVoiceResponse(
+  text: string, respondTo: string, requestId: string,
+  noAudio: boolean, playOnMac: boolean
+): Promise<void> {
+  if (noAudio && !playOnMac) return;
+
+  sendToAIM({ type: 'status', state: 'speaking' });
+
+  const clean = text.replace(/\[.*?\]/g, '').replace(/\bjarvis\b[,.]?\s*/gi, '').trim();
+  if (!clean) return;
+
+  if (playOnMac) {
+    await playAudioOnMac(clean);
+  } else {
+    const audioBuf = await generateTTSAudio(clean);
+    if (audioBuf) {
+      sendToAIM({ type: 'audio', data: audioBuf.toString('base64'), to: respondTo, requestId });
+    }
+    sendToAIM({ type: 'audioEnd', to: respondTo, requestId });
+  }
 }
 
 function connectToAIM(config: AIMBridgeConfig): void {
@@ -303,6 +427,14 @@ function connectToAIM(config: AIMBridgeConfig): void {
   aimWs.on('message', (data) => {
     try {
       const msg = JSON.parse(data.toString());
+
+      // Handle cancel — abort current command's TTS generation
+      if (msg.type === 'cancel') {
+        if (currentCommandAbort) {
+          console.log(`  [aim] Cancel received for ${msg.requestId}`);
+          currentCommandAbort.abort();
+        }
+      }
 
       // Handle commands from devices
       if (msg.type === 'command' && msg.text) {

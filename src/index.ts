@@ -33,6 +33,7 @@ import { SiteMonitorModule } from './modules/site-monitor.js';
 import { ScreenInteractModule } from './modules/screen-interact.js';
 import { SchedulerModule } from './modules/scheduler.js';
 import { ConversionsModule } from './modules/conversions.js';
+import { DossierModule } from './modules/dossier.js';
 import { closeAll as closeAllBrowsers } from './utils/browser-manager.js';
 import { voiceInput } from './voice/voice-input.js';
 import { VoiceAssistant } from './voice/voice-assistant.js';
@@ -44,6 +45,34 @@ import { startWatchServer, stopWatchServer } from './watch/ws-server.js';
 import { startAIMBridge, stopAIMBridge, broadcastStatusViaAIM } from './watch/aim-bridge.js';
 import { IS_MAC } from './utils/platform.js';
 import { setAIMStatusBroadcast } from './utils/status-reporter.js';
+import { startBreachMonitor, stopBreachMonitor, getBreachStatus, runManualCheck } from './utils/breach-monitor.js';
+import { startNetworkGuardian, stopNetworkGuardian, getNetworkDevices, trustDevice, runManualScan } from './utils/network-guardian.js';
+import { startThreatMonitor, stopThreatMonitor } from './utils/threat-monitor.js';
+import { CommsStackModule } from './modules/comms-stack.js';
+import { DevAgentModule } from './modules/dev-agent.js';
+import { ComputerControlModule } from './modules/computer-control.js';
+import { DesktopControlModule } from './modules/desktop-control.js';
+import { YouTubeToolsModule } from './modules/youtube-tools.js';
+import { FlightFinderModule } from './modules/flight-finder.js';
+import { startBackgroundIntelligence, stopBackgroundIntelligence, learnCommand } from './utils/background-intelligence.js';
+import { EmailModule } from './modules/email.js';
+import { CalendarModule } from './modules/calendar.js';
+import { SpotifyModule } from './modules/spotify.js';
+import { SmartHomeModule } from './modules/smart-home.js';
+import { FileIntelligenceModule } from './modules/file-intelligence.js';
+import { CodingAgentModule } from './modules/coding-agent.js';
+import { SelfImproveModule } from './modules/self-improve.js';
+import MultiAgentModule from './modules/multi-agent.js';
+import ApiOrchestratorModule from './modules/api-orchestrator.js';
+import { MorningDigestModule } from './modules/morning-digest.js';
+import { initIntelligence, recordTrace } from './intelligence/index.js';
+import DataConnectorsModule from './modules/data-connectors.js';
+
+import { EnergyMonitorModule } from './modules/energy-monitor.js';
+import { SandboxRunnerModule } from './modules/sandbox-runner.js';
+import { discoverGeneratedModules, bootModules } from './core/registry.js';
+import { loadPluginsFromConfig } from './core/plugin-loader.js';
+import { startSidecar, stopSidecar } from './utils/rust-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -108,6 +137,15 @@ function printHelp(): void {
   console.log('    startup clear       Clear startup commands');
   console.log('    cmd1 && cmd2        Chain commands');
   console.log('    exit / quit / shutdown  Exit JARVIS');
+  console.log('');
+  console.log('  Breach Monitor (always-on)');
+  console.log('    breach status       Show monitored domains & recent alerts');
+  console.log('    breach check        Force a manual security scan now');
+  console.log('');
+  console.log('  Network Guardian (always-on)');
+  console.log('    network devices     List all known devices on your network');
+  console.log('    network scan        Force a manual network scan now');
+  console.log('    trust device <mac>  Trust a device so it stops triggering alerts');
   console.log('');
 }
 
@@ -298,7 +336,7 @@ async function runStartupCommands(): Promise<void> {
       console.log(fmt.dim('  Running startup commands...'));
       for (const cmd of config.commands) {
         console.log(fmt.dim(`  → ${cmd}`));
-        const parsed = parse(cmd);
+        const parsed = await parse(cmd);
         if (parsed) {
           const result = await execute(parsed);
           if (result.success) console.log(fmt.success(result.message));
@@ -335,11 +373,42 @@ export function boot(): void {
   registry.register(new ResearchModule());
   registry.register(new BrowserControlModule());
   registry.register(new WhatsAppModule());
+  registry.register(new CommsStackModule());
   registry.register(new SiteMonitorModule());
   registry.register(new ScreenInteractModule());
+  registry.register(new DossierModule());
+  registry.register(new DevAgentModule());
+  registry.register(new ComputerControlModule());
+  registry.register(new DesktopControlModule());
+  registry.register(new YouTubeToolsModule());
+  registry.register(new FlightFinderModule());
+  registry.register(new EmailModule());
+  registry.register(new CalendarModule());
+  registry.register(new SpotifyModule());
+  registry.register(new SmartHomeModule());
+  registry.register(new FileIntelligenceModule());
+  registry.register(new CodingAgentModule());
+  registry.register(new SelfImproveModule());
+  registry.register(MultiAgentModule);
+  registry.register(ApiOrchestratorModule);
+  registry.register(new MorningDigestModule());
+  registry.register(DataConnectorsModule);
+
+  registry.register(new EnergyMonitorModule());
+  registry.register(new SandboxRunnerModule());
+
+  // Discover generated modules and plugins
+  discoverGeneratedModules().catch(() => {});
+  loadPluginsFromConfig().catch(() => {});
 
   // Initialize persistent memory
   loadMemory();
+
+  // Initialize intelligence layer (trace-driven learning, memory index, routing)
+  initIntelligence();
+
+  // Start Rust sidecar for fast vector search (non-blocking, falls back to TS)
+  startSidecar().catch(() => {});
 
   // Restore persisted scheduled tasks
   scheduler.restore();
@@ -365,6 +434,12 @@ export function boot(): void {
   // (on Mac: connects to remote VPS AIM as 'mac' — if configured)
   startAIMBridge();
 
+  // Start always-on background services
+  startBreachMonitor();
+  startNetworkGuardian();
+  startThreatMonitor();
+  if (IS_MAC) startBackgroundIntelligence();
+
   // Auto-launch menubar app (Mac only)
   if (IS_MAC) {
     const menubarScript = join(__dirname, '..', 'menubar', 'start-menubar.sh');
@@ -388,6 +463,11 @@ export function boot(): void {
     const cleanup = () => {
       clearInterval(keepAlive);
       scheduler.stopAll();
+      stopBreachMonitor();
+      stopNetworkGuardian();
+      stopThreatMonitor();
+      stopBackgroundIntelligence();
+      stopSidecar();
       stopAIMBridge();
       flushHistory();
       flushMemory();
@@ -423,6 +503,11 @@ export function boot(): void {
       stopSpeaking();
       voiceAssistant?.stop();
       scheduler.stopAll();
+      stopBreachMonitor();
+      stopNetworkGuardian();
+      stopThreatMonitor();
+      stopBackgroundIntelligence();
+      stopSidecar();
 
       await closeAllBrowsers();
       flushHistory();
@@ -538,6 +623,38 @@ export function boot(): void {
       return;
     }
 
+    // ── Breach Monitor commands ──
+    if (/^breach\s+status$/i.test(input)) {
+      console.log(getBreachStatus());
+      return;
+    }
+    if (/^breach\s+check$/i.test(input) || /^breach\s+scan$/i.test(input)) {
+      console.log(fmt.info('Running breach monitor scan...'));
+      const result = await runManualCheck();
+      console.log(result);
+      return;
+    }
+
+    // ── Network Guardian commands ──
+    if (/^network\s+devices$/i.test(input) || /^network\s+status$/i.test(input) || /^network\s+scan$/i.test(input)
+        || /unknown\s+devices?/i.test(input) || /new\s+devices?/i.test(input) || /who'?s?\s+on\s+(my\s+)?(net|wifi)/i.test(input)
+        || /any\s+devices?/i.test(input) || /scan\s+(my\s+)?network/i.test(input) || /network\s+intruders?/i.test(input)) {
+      if (/scan$/i.test(input) || /unknown|new|intruder|any\s+device|who/i.test(input)) {
+        console.log(fmt.info('Scanning network...'));
+        const result = await runManualScan();
+        console.log(result);
+      } else {
+        console.log(getNetworkDevices());
+      }
+      return;
+    }
+    const trustMatch = input.match(/^trust\s+device\s+([0-9a-f:]+)(?:\s+(.+))?$/i);
+    if (trustMatch) {
+      const result = trustDevice(trustMatch[1], trustMatch[2]);
+      console.log(fmt.success(result));
+      return;
+    }
+
     // Voice mode (blocking, legacy)
     if (/^(?:voice|listen|voice\s+mode|start\s+listening)$/i.test(input)) {
       const available = await voiceInput.isAvailable();
@@ -546,7 +663,7 @@ export function boot(): void {
         return;
       }
       await voiceInput.startContinuous(async (text) => {
-        const parsed = parse(text);
+        const parsed = await parse(text);
         if (parsed) {
           const result = await execute(parsed);
           setLast(parsed, result);
@@ -570,7 +687,7 @@ export function boot(): void {
     }
 
     // Parse and execute
-    let parsed = parse(input);
+    let parsed = await parse(input);
 
     // NLU fallback: try natural language mapping if regex/keyword parsing failed
     if (!parsed) {
@@ -634,12 +751,29 @@ export function boot(): void {
     }
 
     reportCommand(input);
+    const startTime = Date.now();
     const result = await execute(parsed);
+    const latencyMs = Date.now() - startTime;
     setLast(parsed, result);
     recordCommand(input, result);
-
+    learnCommand(input);
     // Keep conversation engine aware for follow-up context
     conversationEngine.recordCommandExecution(input, result);
+
+    // Record trace for intelligence layer
+    recordTrace({
+      timestamp: Date.now(),
+      input,
+      module: parsed.module,
+      action: parsed.action,
+      args: parsed.args,
+      result: { success: result.success, message: result.message.slice(0, 500), latencyMs },
+      context: {
+        timeOfDay: (() => { const h = new Date().getHours(); return h < 6 ? 'night' : h < 12 ? 'morning' : h < 17 ? 'afternoon' : h < 21 ? 'evening' : 'night'; })(),
+        dayOfWeek: new Date().getDay(),
+        voiceMode: isVoiceEnabled(),
+      },
+    });
 
     if (result.success) {
       if (!result.streamed) console.log(fmt.success(result.message));
@@ -661,6 +795,11 @@ export function boot(): void {
       stopSpeaking();
       voiceAssistant?.stop();
       scheduler.stopAll();
+      stopBreachMonitor();
+      stopNetworkGuardian();
+      stopThreatMonitor();
+      stopBackgroundIntelligence();
+      stopSidecar();
 
       closeAllBrowsers().catch(() => {});
       flushHistory();
@@ -685,6 +824,10 @@ export function boot(): void {
     stopSpeaking();
     voiceAssistant?.stop();
     scheduler.stopAll();
+    stopBreachMonitor();
+    stopNetworkGuardian();
+    stopBackgroundIntelligence();
+    stopSidecar();
     stopWatchServer();
     closeAllBrowsers().catch(() => {});
     if (!processing) {

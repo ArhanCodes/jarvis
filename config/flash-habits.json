@@ -1,0 +1,68 @@
+{
+  "habits": [
+    {
+      "action": "use Claude",
+      "context": "evening (22:00)",
+      "occurrences": 1,
+      "lastSeen": "2026-03-18T18:21:55.936Z",
+      "automated": false
+    },
+    {
+      "action": "use Safari",
+      "context": "evening (22:00)",
+      "occurrences": 2,
+      "lastSeen": "2026-03-18T18:46:55.588Z",
+      "automated": false
+    },
+    {
+      "action": "use Google Chrome",
+      "context": "evening (22:00)",
+      "occurrences": 5,
+      "lastSeen": "2026-03-18T18:56:55.595Z",
+      "automated": false
+    },
+    {
+      "action": "use Claude",
+      "context": "evening (23:00)",
+      "occurrences": 7,
+      "lastSeen": "2026-03-18T19:31:55.561Z",
+      "automated": false
+    },
+    {
+      "action": "use Safari",
+      "context": "evening (23:00)",
+      "occurrences": 1,
+      "lastSeen": "2026-03-18T19:38:32.542Z",
+      "automated": false
+    },
+    {
+      "action": "use Google Chrome",
+      "context": "evening (23:00)",
+      "occurrences": 2,
+      "lastSeen": "2026-03-18T19:53:32.554Z",
+      "automated": false
+    },
+    {
+      "action": "use MSTeams",
+      "context": "morning (0:00)",
+      "occurrences": 1,
+      "lastSeen": "2026-03-18T20:03:32.770Z",
+      "automated": false
+    },
+    {
+      "action": "use Google Chrome",
+      "context": "morning (0:00)",
+      "occurrences": 2,
+      "lastSeen": "2026-03-18T20:13:32.613Z",
+      "automated": false
+    },
+    {
+      "action": "use Terminal",
+      "context": "morning (0:00)",
+      "occurrences": 1,
+      "lastSeen": "2026-03-18T20:18:32.588Z",
+      "automated": false
+    }
+  ],
+  "lastUpdated": "2026-03-18T20:18:32.588Z"
+}

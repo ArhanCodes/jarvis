@@ -62,7 +62,7 @@ async function claudeStreamChat(
     },
     body: JSON.stringify({
       model: config.claudeModel || 'claude-3-5-sonnet-20241022',
-      max_tokens: 2048,
+      max_tokens: 4096,
       system: systemPrompt,
       messages: messages,
       stream: true,
@@ -146,31 +146,13 @@ export async function llmStreamChat(
 ): Promise<string> {
   const provider = await selectProvider();
 
-  if (provider === 'claude') {
-    try {
-      lastUsedLabel = 'claude';
-      return await claudeStreamChat(messages, systemPrompt, onToken);
-    } catch (err) {
-      // Fallback to Ollama if Claude fails and Ollama is available
-      const ollamaUp = await isOllamaRunning();
-      if (ollamaUp) {
-        lastUsedLabel = `✗ claude → ${config.ollamaModel || 'llama3'}`;
-        const ollamaMessages: OllamaChatMessage[] = [
-          { role: 'system', content: systemPrompt },
-          ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-        ];
-        return ollamaChatStream(config.ollamaModel || 'llama3', ollamaMessages, onToken);
-      }
-      throw err;
-    }
-  } else {
-    lastUsedLabel = config.ollamaModel || 'llama3';
-    // Convert to Ollama format
-    const ollamaMessages: OllamaChatMessage[] = [
-      { role: 'system', content: systemPrompt },
-      ...messages.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-    ];
-    return ollamaChatStream(config.ollamaModel || 'llama3', ollamaMessages, onToken);
+  // Always use Claude — no Ollama fallback
+  lastUsedLabel = 'Claude (via API)';
+  try {
+    return await claudeStreamChat(messages, systemPrompt, onToken);
+  } catch (err) {
+    console.error('[JARVIS] Claude API error:', (err as Error).message);
+    throw err;
   }
 }
 

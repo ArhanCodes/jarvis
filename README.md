@@ -2,17 +2,26 @@
 
 **Just A Rather Very Intelligent System**
 
-A macOS AI assistant with voice control, screen awareness, browser automation, and connection across Apple Watch and iPhone via [AIM](https://github.com/arhancodes/aim)
+A macOS AI assistant with voice control, screen awareness, browser automation, and multi-device support via Apple Watch and iPhone. Talk to it, type to it, or let it watch your screen — JARVIS understands context and takes action.
+
+```
+       ██╗ █████╗ ██████╗ ██╗   ██╗██╗███████╗
+       ██║██╔══██╗██╔══██╗██║   ██║██║██╔════╝
+       ██║███████║██████╔╝██║   ██║██║███████╗
+  ██   ██║██╔══██║██╔══██╗╚██╗ ██╔╝██║╚════██║
+  ╚█████╔╝██║  ██║██║  ██║ ╚████╔╝ ██║███████║
+   ╚════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝╚══════╝
+```
 
 ## Quick Start
 
 ```bash
-git clone https://github.com/ArhanCodes/jarvis.git
-cd jarvis && npm install
+cd ~/Downloads/jarvis
+npm install
 npm run dev
 ```
 
-Say "Jarvis" to activate voice control or type commands directly
+Say "Jarvis" to activate voice control, or type commands directly.
 
 ---
 
@@ -20,7 +29,11 @@ Say "Jarvis" to activate voice control or type commands directly
 
 | Category | Capabilities |
 |----------|-------------|
-| **25 modules** | Apps, browser, system, files, media, windows, timers, processes, clipboard, workflows, AI chat, voice routines, screen awareness, screen interaction, WhatsApp, weather/news, research, site monitoring, conversions, scheduling, and more |
+| **45+ modules** | All original modules plus: email, calendar, Spotify API, smart home (HomeKit), file intelligence, coding agent, deep research, morning digest, data connectors, energy monitor, multi-agent, API orchestrator, sandbox runner, comms stack, dossier, computer control, desktop control, YouTube tools, flight finder, dev agent, self-improve |
+| **Intelligence layer** | Trace-driven learning, TF-IDF memory search, route prediction, habit detection, context injection |
+| **Rust sidecar** | Native Rust binary for sub-millisecond vector search, fuzzy matching (Levenshtein), and trace analytics |
+| **Plugin system** | @RegisterModule() decorator, hot-reload, external plugin packages |
+| **Security monitoring** | Always-on breach monitor, network guardian, threat detection |
 | **Conversational AI** | Multi-turn conversations powered by Claude API with Ollama fallback — streams responses, executes actions mid-conversation, remembers context |
 | **Voice assistant** | Always-on wake word detection ("Jarvis"), on-device speech recognition, text-to-speech responses via Edge TTS or ElevenLabs |
 | **Screen awareness** | OCR-based screen reading — JARVIS can see what's on your screen and respond to it |
@@ -44,7 +57,7 @@ Say "Jarvis" to activate voice control or type commands directly
 
 ## Voice Assistant
 
-JARVIS has an always-on voice assistant with wake word detection. Say "Jarvis" and it starts listening
+JARVIS has an always-on voice assistant with wake word detection. Say "Jarvis" and it starts listening — no button press needed.
 
 ```
 jarvis> voice on
@@ -60,13 +73,12 @@ jarvis> voice on
   ✓ Battery: 60%
 
   🗣  "good night"
-  (runs good night routine — shuts itself off, turns off screen)
+  (runs good night routine — lowers volume, enables DND, locks screen)
 ```
 
-Uses Apple's SFSpeechRecognizer for on-device speech recognition and Edge TTS/ElevenLabs for spoken responses
+Uses Apple's **SFSpeechRecognizer** for on-device speech recognition and **Edge TTS** or **ElevenLabs** for spoken responses. Fully on-device wake word detection, free, no cloud dependency for recognition.
 
-
-Requires macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
+**Requires:** macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
 
 ---
 
@@ -92,7 +104,7 @@ jarvis> remember that my project deadline is March 20th
   ✓ Noted — I'll remember your project deadline is March 20th.
 ```
 
-Powered by Claude API with automatic Ollama fallback for offline use. The conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
+Powered by **Claude API** with automatic **Ollama** fallback for offline use. The conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
 
 ---
 
@@ -140,7 +152,7 @@ jarvis> screenshot
   ✓ Screenshot saved to jarvis-screenshot-1710432000.png
 ```
 
-Full browser automation powered by Playwright (navigate, search, click elements, fill forms, read page content, and take screenshots)
+Full browser automation powered by Playwright — navigate, search, click elements, fill forms, read page content, and take screenshots.
 
 | Command | What it does |
 |---------|-------------|
@@ -161,7 +173,7 @@ jarvis> run ls -la
   ✓ (full directory listing)
 ```
 
-Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked
+Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked.
 
 | Command | What it does |
 |---------|-------------|
@@ -209,7 +221,7 @@ jarvis> delete ~/Desktop/junk.txt
   ✓ Moved to Trash: /Users/you/Desktop/junk.txt
 ```
 
-File search uses Spotlight (`mdfind`) for instant results. Delete moves files to Trash (always recoverable)
+File search uses **Spotlight** (`mdfind`) for instant results. Delete moves files to Trash (always recoverable).
 
 | Command | What it does |
 |---------|-------------|
@@ -260,9 +272,9 @@ jarvis> stopwatch
   ✓ Stopwatch started! Type "stopwatch" again to stop.
 ```
 
-When timers fire, you get a notification with sound + a terminal alert.
+When timers fire, you get a **macOS notification** with sound + a terminal alert.
 
-Time formats: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a bare number (assumed minutes)
+Time formats: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a bare number (assumed minutes).
 
 | Command | What it does |
 |---------|-------------|
@@ -368,7 +380,7 @@ jarvis> play "Daft Punk"
   ✓ Searching Spotify for "Daft Punk"
 ```
 
-Auto-detects whether Spotify or Apple Music is running
+Auto-detects whether Spotify or Apple Music is running.
 
 | Command | What it does |
 |---------|-------------|
@@ -408,7 +420,7 @@ jarvis> translate to Spanish
   (translates selected text)
 ```
 
-Processes currently selected text with AI for rewriting, grammar fixes, translation, and more
+Processes currently selected text with AI for rewriting, grammar fixes, translation, and more.
 
 ### WhatsApp
 
@@ -420,7 +432,7 @@ jarvis> read whatsapp
   ✓ Recent messages: ...
 ```
 
-Send and read WhatsApp messages through automated browser control
+Send and read WhatsApp messages through automated browser control.
 
 ### Weather & News
 
@@ -432,7 +444,7 @@ jarvis> news
   ✓ Top headlines: ...
 ```
 
-Get current weather conditions and top news headlines
+Get current weather conditions and top news headlines.
 
 ### Smart Routines
 
@@ -462,7 +474,7 @@ jarvis> time in Tokyo
   ✓ Tokyo: 2:30 AM (JST, +9:00)
 ```
 
-Unit conversions and timezone lookups
+Unit conversions and timezone lookups — always accurate, no LLM needed.
 
 ### Site Monitor
 
@@ -474,7 +486,7 @@ jarvis> monitor mysite.com every 5 min
   ✓ Monitoring mysite.com every 5 minutes
 ```
 
-Check if websites and services are online, with optional recurring monitoring
+Check if websites and services are online, with optional recurring monitoring.
 
 ### Workflows & Automation
 
@@ -522,7 +534,7 @@ jarvis> models
     mistral:latest (4.1 GB)
 ```
 
-Uses Claude API by default (you need to enter an API key) and falls back to Ollama for offline use
+Uses **Claude API** by default for fast, accurate responses. Falls back to **Ollama** for fully offline, local AI. If neither is available, all other JARVIS features still work normally.
 
 | Command | What it does |
 |---------|-------------|
@@ -534,6 +546,21 @@ Uses Claude API by default (you need to enter an API key) and falls back to Olla
 | `clear chat` / `new conversation` | Reset conversation history |
 | `ai status` | Check LLM connection |
 
+### JARVIS Personality
+
+```
+jarvis> hello
+  ✓ Good morning, sir. All systems operational. How may I assist you?
+
+jarvis> tell me a joke
+  ✓ Why do programmers prefer dark mode? Because light attracts bugs.
+
+jarvis> who are you
+  ✓ I'm JARVIS -- Just A Rather Very Intelligent System. I have 45+ modules
+    loaded and can manage your apps, files, system, media, browser, and more.
+```
+
+Time-aware greetings, tech jokes, system-aware mood responses, and existential philosophy.
 
 ### Smart Assist
 
@@ -556,11 +583,68 @@ jarvis> top commands
     3. volume 50 (8x)
 ```
 
+### Research
+
+```
+jarvis> research quantum computing
+  ✓ 15 papers analyzed (8 arXiv, 12 Semantic Scholar)
+  Report saved to config/research-reports/...
+
+jarvis> deep research transformer architectures
+  ✓ Deep research complete: 4 rounds, 28 papers
+
+jarvis> compare React vs Vue
+  ✓ Comparison complete with table and recommendation
+
+jarvis> quick research latest iPhone
+  ✓ Quick web lookup complete
+```
+
+| Command | What it does |
+|---------|-------------|
+| `research <topic>` | Academic + web research (arXiv, Semantic Scholar, DuckDuckGo) |
+| `deep research <topic>` | Multi-hop investigation with follow-up rounds |
+| `quick research <topic>` | Fast web-only lookup |
+| `compare X vs Y` | Side-by-side comparison with recommendation |
+| `search docs for <topic>` | Search local files only |
+| `research status` | Check module status |
+
+### Intelligence Layer
+
+```
+jarvis> (runs automatically in background)
+  Trace recording: every command logged with timing and context
+  Route prediction: suggests modules based on usage patterns
+  Habit detection: identifies your daily routines
+  Memory search: hybrid TF-IDF + Rust vector search
+```
+
+JARVIS learns from your usage. Every command is recorded as a trace with timing, context (time of day, active app, voice mode), and result. The learning engine analyzes these traces to detect habits, predict what you'll do next, and suggest automations.
+
+### Rust Sidecar
+
+```
+jarvis> (starts automatically on boot)
+  [rust-bridge] Sidecar ready
+  Vector search: <1ms memory retrieval
+  Fuzzy match: Rust-accelerated Levenshtein
+  Trace analytics: single-pass stats over 5000+ traces
+```
+
+A compiled Rust binary (`rust-sidecar/`) that accelerates performance-critical operations. Falls back gracefully to TypeScript when unavailable.
+
+| Capability | Endpoint | What it does |
+|-----------|----------|-------------|
+| Vector search | `/search` | Sub-millisecond semantic memory retrieval |
+| Fuzzy matching | `/fuzzy-match` | Rust Levenshtein for typo correction |
+| Trace analytics | `/trace-analytics` | Comprehensive usage statistics |
+| Habit detection | `/detect-habits` | Pattern recognition across trace history |
+
 ---
 
 ## Multi-Device Support
 
-JARVIS connects to Apple Watch and iPhone via [AIM](https://github.com/arhancodes/aim)
+JARVIS connects to Apple Watch and iPhone via **AIM** (Advanced Idea Mechanics), a WebSocket relay server.
 
 | Device | What it does |
 |--------|-------------|
@@ -568,6 +652,7 @@ JARVIS connects to Apple Watch and iPhone via [AIM](https://github.com/arhancode
 | **iPhone** | Send commands and receive responses via companion app |
 | **Apple Watch** | Quick commands from your wrist, haptic feedback |
 
+The menubar app shows JARVIS status at a glance — running state, voice mode, and last command processed.
 
 ---
 
@@ -677,6 +762,150 @@ jarvis> neetwork
   ✓ Network: 192.168.1.5, WiFi: MyNetwork
 ```
 
+---
+
+## Architecture
+
+```
+User Input → Variable Expansion → Alias Expansion → Pattern Parser → Executor → Module
+                                                          ↓                        ↓
+                                                    Keyword Fallback    AppleScript / shell / LLM
+                                                          ↓
+                                                    Fuzzy Match (Rust/Levenshtein)
+                                                          ↓
+                                                    NLU Mapping (natural language)
+                                                          ↓
+                                                    Intelligence Layer (traces, prediction, context)
+                                                          ↓
+                                                    Conversation Engine (Claude / Ollama)
+```
+
+The core parser uses **no AI/LLM** — it's a seven-phase engine:
+
+1. **Variable expansion** — `$HOME`, `$DATE`, custom `$vars`
+2. **Alias expansion** — user-defined shortcuts
+3. **"open" disambiguation** — detects if target is app or file path
+4. **Regex pattern matching** — each module declares regex patterns; first match wins (confidence 1.0)
+5. **Keyword fallback** — exact keyword match (confidence 0.6), then Levenshtein fuzzy match (confidence 0.4)
+6. **NLU mapping** — natural language phrases mapped to existing commands (confidence 0.5)
+7. **Conversation engine** — if nothing matches, treats input as natural language and routes to the conversational AI
+
+### Project Structure
+
+```
+jarvis/
+├── bin/jarvis.ts                  # Entry point
+├── rust-sidecar/
+│   ├── Cargo.toml
+│   └── src/
+│       ├── main.rs              # HTTP server (actix-web) — vector search, fuzzy, traces
+│       ├── vector.rs            # Cosine similarity vector index
+│       ├── embeddings.rs        # TF-IDF text embedder (384-dim)
+│       ├── fuzzy.rs             # Levenshtein distance + batch matching
+│       └── traces.rs            # Trace analytics + habit detection
+├── config/
+│   ├── aliases.json               # User command shortcuts
+│   ├── startup.json               # Auto-run on boot
+│   ├── workflows.json             # Saved workflows
+│   └── scheduled-tasks.json       # Recurring tasks
+├── src/
+│   ├── index.ts                   # REPL loop, wires everything together
+│   ├── mac-client.ts              # Thin client for VPS mode
+│   ├── core/
+│   │   ├── types.ts               # Shared interfaces (45+ module types)
+│   │   ├── parser.ts              # 7-phase NL parser + fuzzy matching
+│   │   ├── registry.ts            # Module registry
+│   │   ├── executor.ts            # Dispatches to modules
+│   │   ├── conversation-engine.ts # Multi-turn AI with action execution
+│   │   ├── memory.ts              # Persistent memory and conversation context
+│   │   ├── capabilities.ts        # System prompt builder for AI
+│   │   ├── history.ts             # Persistent command history
+│   │   └── context.ts             # Session state + variable expansion
+│   ├── intelligence/
+│   │   ├── index.ts               # Barrel exports + initialization
+│   │   ├── trace-store.ts         # Command trace recording (capped at 5000)
+│   │   ├── router-policy.ts       # Route suggestion + next-command prediction
+│   │   ├── learning-engine.ts     # Habit detection + failure analysis
+│   │   ├── memory-index.ts        # TF-IDF search + hybrid Rust vector search
+│   │   ├── context-engine.ts      # Context injection for LLM prompts
+│   │   └── energy-tracker.ts      # Operation energy/cost tracking
+│   ├── modules/                   # 45+ modules (see table below)
+│   ├── utils/
+│   │   ├── shell.ts               # Safe child_process wrapper + deny-list
+│   │   ├── osascript.ts           # AppleScript helpers
+│   │   ├── formatter.ts           # Chalk colored terminal output
+│   │   ├── ollama.ts              # Ollama HTTP client (streaming)
+│   │   ├── llm.ts                 # Hybrid LLM provider (Claude + Ollama)
+│   │   ├── browser-manager.ts     # Playwright browser lifecycle
+│   │   ├── voice-output.ts        # TTS via Edge TTS / ElevenLabs
+│   │   ├── platform.ts            # OS detection (macOS / Linux)
+│   │   ├── mac-proxy.ts           # Remote command proxy for VPS mode
+│   │   └── status-reporter.ts     # Status file + AIM broadcast
+│   ├── voice/
+│   │   ├── voice-assistant.ts     # Wake word + speech recognition + conversation
+│   │   └── voice-input.ts         # macOS Speech Recognition via Swift
+│   └── watch/
+│       ├── aim-bridge.ts          # AIM WebSocket bridge for multi-device
+│       └── ws-server.ts           # WebSocket server for Watch connectivity
+├── menubar/
+│   ├── JarvisMenubar.swift        # Native macOS menubar app
+│   └── start-menubar.sh           # Menubar launcher
+├── watch/JarvisWatch/             # Xcode project for Watch + iPhone apps
+├── package.json
+└── tsconfig.json
+```
+
+### 45+ Modules
+
+| Module | File | Description |
+|--------|------|-------------|
+| App Launcher | `app-launcher.ts` | Open, close, switch between, and list applications |
+| Script Runner | `script-runner.ts` | Run shell commands with safety deny-list |
+| System Monitor | `system-monitor.ts` | CPU, memory, disk, battery, and network info |
+| File Operations | `file-operations.ts` | Search, move, copy, and delete files |
+| System Control | `system-control.ts` | Volume, brightness, dark mode, DND, sleep, lock |
+| Timers | `timer.ts` | Timers, reminders, alarms, and stopwatch |
+| Process Manager | `process-manager.ts` | Kill processes, find resource hogs, check ports |
+| Clipboard | `clipboard.ts` | Copy, paste, and clipboard history |
+| Window Manager | `window-manager.ts` | Tile, resize, fullscreen, and arrange windows |
+| Media Control | `media-control.ts` | Spotify and Apple Music control |
+| Workflows | `workflow.ts` | Multi-step workflows and macOS Shortcuts |
+| Personality | `personality.ts` | Greetings, jokes, and conversation |
+| AI Chat | `ai-chat.ts` | Chat with Claude or Ollama, summarize, explain |
+| Smart Assist | `smart-assist.ts` | NLU mapping, suggestions, and usage analytics |
+| Browser Control | `browser-control.ts` | Full browser automation via Playwright |
+| WhatsApp | `whatsapp.ts` | Send and read WhatsApp messages |
+| Screen Awareness | `screen-awareness.ts` | OCR-based screen reading |
+| Screen Interaction | `screen-interact.ts` | AI-powered text processing on selections |
+| Screen Watcher | `screen-watcher.ts` | Continuous screen monitoring |
+| Smart Routines | `smart-routines.ts` | Voice-triggered routines (morning, night) |
+| Weather & News | `weather-news.ts` | Current weather and top headlines |
+| Research | `research.ts` | Academic paper research |
+| Site Monitor | `site-monitor.ts` | Website uptime checking |
+| Conversions | `conversions.ts` | Unit and timezone conversions |
+| Scheduler | `scheduler.ts` | Recurring task scheduling |
+| Email | `email.ts` | Gmail via Google API |
+| Calendar | `calendar.ts` | Google Calendar integration |
+| Spotify | `spotify.ts` | Spotify Web API — play, search, playlists |
+| Smart Home | `smart-home.ts` | HomeKit control via macOS Shortcuts |
+| File Intelligence | `file-intelligence.ts` | Advanced file analysis and search |
+| Coding Agent | `coding-agent.ts` | Autonomous code generation and git |
+| Self-Improve | `self-improve.ts` | Generates and hot-reloads its own modules |
+| Multi-Agent | `multi-agent.ts` | Parallel task execution via Promise.allSettled |
+| API Orchestrator | `api-orchestrator.ts` | Call any API via natural language |
+| Morning Digest | `morning-digest.ts` | Daily briefing — weather, calendar, email, news |
+| Data Connectors | `data-connectors.ts` | Slack, Notion, Apple Health, Strava |
+| Deep Research | `deep-research.ts` | Multi-hop research with citations |
+| Energy Monitor | `energy-monitor.ts` | Track operation energy and LLM costs |
+| Sandbox Runner | `sandbox-runner.ts` | Docker-sandboxed code execution |
+| Comms Stack | `comms-stack.ts` | Unified communications hub |
+| Dossier | `dossier.ts` | Person/company intelligence profiles |
+| Computer Control | `computer-control.ts` | Full desktop automation |
+| Desktop Control | `desktop-control.ts` | Window and desktop management |
+| YouTube Tools | `youtube-tools.ts` | YouTube search and playback |
+| Flight Finder | `flight-finder.ts` | Flight search and price tracking |
+| Dev Agent | `dev-agent.ts` | Development workflow automation |
+
 ## Dependencies
 
 **Runtime:**
@@ -686,6 +915,7 @@ jarvis> neetwork
 - [`playwright`](https://playwright.dev) — browser automation
 - [`@elevenlabs/elevenlabs-js`](https://github.com/elevenlabs/elevenlabs-js) — voice synthesis (optional)
 - [`dotenv`](https://github.com/motdotla/dotenv) — environment variables
+- [`actix-web`](https://actix.rs) — Rust HTTP server (sidecar)
 
 **Dev only:**
 
@@ -693,7 +923,7 @@ jarvis> neetwork
 - `tsx` — run .ts files directly in dev
 - `@types/node` — Node.js type definitions
 
-Everything else is Node.js built-ins (`readline`, `child_process`, `os`, `fs`) and macOS native tools (`osascript`, `mdfind`, `pmset`, `open`, `pbcopy`/`pbpaste`, `lsof`, `shortcuts`)
+Everything else is Node.js built-ins (`readline`, `child_process`, `os`, `fs`) and macOS native tools (`osascript`, `mdfind`, `pmset`, `open`, `pbcopy`/`pbpaste`, `lsof`, `shortcuts`).
 
 ## Requirements
 
@@ -702,6 +932,7 @@ Everything else is Node.js built-ins (`readline`, `child_process`, `os`, `fs`) a
 - **Xcode Command Line Tools** (for voice commands): `xcode-select --install`
 - **Ollama** (optional, for offline AI): [ollama.com](https://ollama.com) — `ollama serve` then `ollama pull llama3`
 - **Claude API key** (optional, for cloud AI): set in `config/llm-config.json`
+- **Rust** (optional, for sidecar): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 
 ## Build & Install
 
@@ -712,6 +943,9 @@ npm run dev
 # Production build
 npm run build
 npm start
+
+# Build Rust sidecar (optional — JARVIS works without it)
+cd rust-sidecar && cargo build --release
 
 # Install globally (makes 'jarvis' available everywhere)
 npm link

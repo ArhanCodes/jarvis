@@ -4,6 +4,7 @@ import { expandVariables } from './context.js';
 import { readFileSync, existsSync, statSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { fuzzyMatch as rustFuzzyMatch, isSidecarAvailable, type KeywordEntry } from '../utils/rust-bridge.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -92,7 +93,7 @@ export function splitChainedCommands(input: string): string[] {
   return parts.filter(Boolean);
 }
 
-export function parse(raw: string): ParsedCommand | null {
+export async function parse(raw: string): Promise<ParsedCommand | null> {
   let input = raw.trim();
   if (!input) return null;
 
@@ -196,19 +197,51 @@ export function parse(raw: string): ParsedCommand | null {
   }
 
   // Phase 5: Fuzzy keyword match (typo tolerance, distance <= 2)
+  // Try Rust sidecar first for faster Levenshtein, fall back to JS
   if (words.length <= 3) {
+    const rustResult = await tryRustFuzzyMatch(input, keywordMap);
+    if (rustResult) return rustResult;
+
+    // JS fallback
     const allKeywords = Object.keys(keywordMap);
     for (const word of words) {
-      if (word.length < 3) continue; // skip very short words
+      if (word.length < 3) continue;
       for (const keyword of allKeywords) {
         const dist = levenshtein(word, keyword);
         if (dist <= 2 && dist < word.length * 0.4) {
-          const { module, action } = keywordMap[keyword];
+          const { module, action } = keywordMap[word in keywordMap ? word : keyword];
           return { module, action, args: {}, raw: input, confidence: 0.4 };
         }
       }
     }
   }
 
+  return null;
+}
+
+async function tryRustFuzzyMatch(
+  input: string,
+  keywordMap: Record<string, { module: ModuleName; action: string }>,
+): Promise<ParsedCommand | null> {
+  try {
+    if (!(await isSidecarAvailable())) return null;
+
+    const keywords: KeywordEntry[] = Object.entries(keywordMap).map(
+      ([keyword, { module, action }]) => ({ keyword, module, action }),
+    );
+
+    const match = await rustFuzzyMatch(input, keywords, 2);
+    if (match) {
+      return {
+        module: match.module as ModuleName,
+        action: match.action,
+        args: {},
+        raw: input,
+        confidence: match.confidence * 0.5,
+      };
+    }
+  } catch {
+    // Fall through to JS implementation
+  }
   return null;
 }

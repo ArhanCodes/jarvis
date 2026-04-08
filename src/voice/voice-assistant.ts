@@ -595,7 +595,7 @@ export class VoiceAssistant {
 
       try {
         // Parse the voice command through the same pipeline as text input
-        let parsed = parse(cmd);
+        let parsed = await parse(cmd);
         if (!parsed) parsed = tryNaturalLanguageMapping(cmd);
 
         // If no module matched, check if this looks like a command or conversation

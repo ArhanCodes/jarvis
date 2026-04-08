@@ -135,7 +135,7 @@ export class WorkflowModule implements JarvisModule {
       const step = wf.steps[i];
       console.log(fmt.dim(`  [${i + 1}/${wf.steps.length}] ${step}`));
 
-      const parsed = parse(step);
+      const parsed = await parse(step);
       if (!parsed) {
         console.log(fmt.error(`  Step failed: could not parse "${step}"`));
         results.push({ success: false, message: `Could not parse: ${step}` });

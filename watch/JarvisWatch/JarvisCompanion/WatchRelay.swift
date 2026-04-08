@@ -45,6 +45,7 @@ class WatchRelay: NSObject, WCSessionDelegate {
         }
 
         let respondOnMac = message["respondOnMac"] as? Bool ?? false
+        iOSConnectionManager.shared.start()
 
         if respondOnMac {
             // Send to Mac with noAudio: true — Mac handles the response itself

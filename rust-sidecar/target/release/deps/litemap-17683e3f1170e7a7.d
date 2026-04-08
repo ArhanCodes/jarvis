@@ -1,0 +1,10 @@
+/Users/arhanharchandani/Downloads/jarvis/rust-sidecar/target/release/deps/litemap-17683e3f1170e7a7.d: /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/lib.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/map.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/mod.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/slice_impl.rs
+
+/Users/arhanharchandani/Downloads/jarvis/rust-sidecar/target/release/deps/liblitemap-17683e3f1170e7a7.rlib: /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/lib.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/map.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/mod.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/slice_impl.rs
+
+/Users/arhanharchandani/Downloads/jarvis/rust-sidecar/target/release/deps/liblitemap-17683e3f1170e7a7.rmeta: /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/lib.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/map.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/mod.rs /Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/slice_impl.rs
+
+/Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/lib.rs:
+/Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/map.rs:
+/Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/mod.rs:
+/Users/arhanharchandani/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/litemap-0.8.2/src/store/slice_impl.rs:

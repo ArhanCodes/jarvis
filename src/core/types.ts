@@ -22,7 +22,28 @@ export type ModuleName =
   | 'site-monitor'
   | 'screen-interact'
   | 'scheduler'
-  | 'conversions';
+  | 'conversions'
+  | 'dossier'
+  | 'comms-stack'
+  | 'computer-control'
+  | 'desktop-control'
+  | 'youtube-tools'
+  | 'flight-finder'
+  | 'dev-agent'
+  | 'email'
+  | 'calendar'
+  | 'spotify'
+  | 'smart-home'
+  | 'file-intelligence'
+  | 'coding-agent'
+  | 'self-improve'
+  | 'multi-agent'
+  | 'api-orchestrator'
+  | 'morning-digest'
+  | 'data-connectors'
+  | 'deep-research'
+  | 'sandbox-runner'
+  | 'energy-monitor';
 
 export interface ParsedCommand {
   module: ModuleName;

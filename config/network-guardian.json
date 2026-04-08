@@ -1,0 +1,5 @@
+{
+  "scanIntervalMinutes": 5,
+  "alertOnNewDevices": true,
+  "autoTrustAfterScans": 0
+}

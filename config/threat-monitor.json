@@ -1,0 +1,11 @@
+{
+  "checkIntervalMinutes": 5,
+  "location": "UAE",
+  "keywords": [],
+  "sources": [
+    "https://news.google.com/rss/search?q=UAE+missile+attack+OR+Dubai+attack+OR+houthi+UAE&hl=en&gl=AE&ceid=AE:en",
+    "https://news.google.com/rss/search?q=Middle+East+military+strike+OR+Iran+attack+OR+Gulf+missile&hl=en&gl=AE&ceid=AE:en",
+    "https://www.aljazeera.com/xml/rss/all.xml",
+    "https://feeds.reuters.com/reuters/worldNews"
+  ]
+}

@@ -100,9 +100,6 @@ struct ContentView: View {
             requestSpeechAuth()
             connection.start()
         }
-        .onDisappear {
-            connection.stop()
-        }
         .onReceive(NotificationCenter.default.publisher(for: .jarvisStartRecording)) { _ in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 if connection.isConnected && speechAuthorized && !isRecording {

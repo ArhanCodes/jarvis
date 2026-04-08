@@ -9,14 +9,35 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 function resolveConfigPath(filename: string): string {
-  const candidates = [
-    join(__dirname, '..', '..', 'config', filename),
-    join(__dirname, '..', '..', '..', 'config', filename),
-  ];
-  const configDir = existsSync(join(__dirname, '..', '..', 'config'))
-    ? join(__dirname, '..', '..', 'config')
-    : dirname(candidates[0]);
-
+  // Walk up from __dirname to find the project root config/ directory.
+  // The project root config/ contains memory.json, conversations.json, etc.
+  // We must skip dist/config/ which is a build artifact.
+  let dir = __dirname;
+  for (let i = 0; i < 6; i++) {
+    const candidate = join(dir, 'config', filename);
+    const configDir = join(dir, 'config');
+    // Skip if we're inside the dist directory
+    if (existsSync(join(dir, 'package.json')) && existsSync(configDir) && !dir.includes('/dist')) {
+      return candidate;
+    }
+    // Also check if config exists at this level and package.json is one level up
+    if (existsSync(configDir) && !dir.includes('/dist') && existsSync(join(dir, '..', 'package.json'))) {
+      return candidate;
+    }
+    dir = join(dir, '..');
+  }
+  // Fallback: go up until we find package.json (project root)
+  dir = __dirname;
+  for (let i = 0; i < 6; i++) {
+    dir = join(dir, '..');
+    if (existsSync(join(dir, 'package.json'))) {
+      const configDir = join(dir, 'config');
+      if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
+      return join(configDir, filename);
+    }
+  }
+  // Last resort
+  const configDir = join(__dirname, '..', '..', 'config');
   if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
   return join(configDir, filename);
 }
@@ -270,9 +291,11 @@ export function buildMemoryContext(): string {
 
   // Facts
   if (memoryData.facts.length > 0) {
-    parts.push('[MEMORY - What I know]');
+    parts.push('[MEMORY - What I know about the user (USE THIS TO ANSWER QUESTIONS)]');
     for (const f of memoryData.facts) {
-      parts.push(`- ${f.key}: ${f.value}`);
+      // Format with both the key and a human-readable description
+      const readableKey = f.key.replace(/\./g, ' ').replace(/_/g, ' ');
+      parts.push(`- ${readableKey}: ${f.value} (stored as: ${f.key})`);
     }
   }
 

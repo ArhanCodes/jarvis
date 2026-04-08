@@ -1,0 +1,20 @@
+{
+  "goals": [
+    {
+      "id": "goal-1773857831885",
+      "description": "ship a Jarvis feature",
+      "createdAt": "2026-03-18T18:17:11.885Z",
+      "checks": [
+        "Git status and uncommitted changes",
+        "Build status",
+        "Git branch and diff status",
+        "Test results",
+        "Battery and system health",
+        "Time remaining in day"
+      ],
+      "lastCheckIn": "2026-03-18T19:21:55.424Z",
+      "status": "active"
+    }
+  ],
+  "lastUpdated": "2026-03-18T19:21:55.424Z"
+}

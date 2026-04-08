@@ -152,7 +152,7 @@ function formatDuration(ms: number): string {
 function startTask(task: LiveTask): void {
   const run = async () => {
     console.log(fmt.dim(`\n  [scheduled #${task.id}] Running: ${task.command}`));
-    const parsed = parse(task.command);
+    const parsed = await parse(task.command);
     if (parsed) {
       const result = await execute(parsed);
       if (result.success) {
@@ -178,7 +178,7 @@ function startTaskWithDelay(task: LiveTask, delayMs: number): void {
     // Execute immediately at the scheduled time
     const run = async () => {
       console.log(fmt.dim(`\n  [scheduled #${task.id}] Running: ${task.command}`));
-      const parsed = parse(task.command);
+      const parsed = await parse(task.command);
       if (parsed) {
         const result = await execute(parsed);
         if (result.success) {
@@ -264,7 +264,7 @@ export class SchedulerModule implements JarvisModule {
   }
 
   // ── Create ──
-  private createTask(intervalStr: string, command: string): CommandResult {
+  private async createTask(intervalStr: string, command: string): Promise<CommandResult> {
     const parsed = parseInterval(intervalStr);
     if (!parsed) {
       return {
@@ -284,7 +284,7 @@ export class SchedulerModule implements JarvisModule {
     }
 
     // Validate the command parses
-    const testParsed = parse(command);
+    const testParsed = await parse(command);
     if (!testParsed) {
       return {
         success: false,

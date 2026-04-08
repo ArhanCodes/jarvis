@@ -120,7 +120,7 @@ export class SmartRoutinesModule implements JarvisModule {
 
       // Special case: "news" for morning routine — get top 3 headlines and speak them
       if (step.command === 'news') {
-        const parsed = parse(step.command);
+        const parsed = await parse(step.command);
         if (parsed) {
           const result = await execute(parsed);
           results.push({ step: step.description, ok: result.success, msg: result.message });
@@ -141,7 +141,7 @@ export class SmartRoutinesModule implements JarvisModule {
         continue;
       }
 
-      const parsed = parse(step.command);
+      const parsed = await parse(step.command);
       if (!parsed) {
         console.log(fmt.error(`  Could not parse: "${step.command}"`));
         results.push({ step: step.description, ok: false, msg: 'parse error' });

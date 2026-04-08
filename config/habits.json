@@ -1,0 +1,947 @@
+{
+  "habits": [
+    {
+      "command": "dossier Derin Conroy",
+      "hour": 12,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T08:35:55.075Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Aarush Vij",
+      "hour": 12,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T08:48:47.858Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Aarush Vij",
+      "hour": 13,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T09:00:42.334Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Derin Conroy Dubai College",
+      "hour": 13,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T09:14:36.040Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Dhiren Harchandani",
+      "hour": 23,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T19:55:33.486Z",
+      "automated": false
+    },
+    {
+      "command": "ask who are his 2 boys",
+      "hour": 23,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T19:56:38.788Z",
+      "automated": false
+    },
+    {
+      "command": "ask research",
+      "hour": 23,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T19:57:09.306Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 0,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-20T20:32:30.574Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 13,
+      "dayOfWeek": 6,
+      "occurrences": 2,
+      "lastSeen": "2026-03-21T09:43:02.792Z",
+      "automated": false
+    },
+    {
+      "command": "message Dada How are you dada? Missing you!",
+      "hour": 13,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T09:44:01.387Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 15,
+      "dayOfWeek": 6,
+      "occurrences": 2,
+      "lastSeen": "2026-03-21T11:06:43.118Z",
+      "automated": false
+    },
+    {
+      "command": "checcheck messages",
+      "hour": 15,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T11:17:13.154Z",
+      "automated": false
+    },
+    {
+      "command": "send a message to sb saying u free at 5:15 my time",
+      "hour": 15,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T11:20:40.793Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos the goat human",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:15:37.082Z",
+      "automated": false
+    },
+    {
+      "command": "ask wake up daddys home",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:16:04.165Z",
+      "automated": false
+    },
+    {
+      "command": "ask who created you",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:17:57.392Z",
+      "automated": false
+    },
+    {
+      "command": "message mom on whatsapp bruh",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:26:27.825Z",
+      "automated": false
+    },
+    {
+      "command": "ask who is your favorite human",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:27:17.330Z",
+      "automated": false
+    },
+    {
+      "command": "ask opinions on trump",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:29:31.652Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Derin Conroy Dubai College",
+      "hour": 20,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T16:52:56.101Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Aarush Vij Dubai College",
+      "hour": 21,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T17:09:40.269Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Dhiren Harchandani",
+      "hour": 21,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T17:17:46.036Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Mark Wood Dubai College",
+      "hour": 22,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T18:33:41.955Z",
+      "automated": false
+    },
+    {
+      "command": "site status",
+      "hour": 22,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T18:35:15.052Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos ur daddy",
+      "hour": 23,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-03-21T19:09:18.569Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh",
+      "hour": 16,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-22T12:45:55.520Z",
+      "automated": false
+    },
+    {
+      "command": "ask what is my favorite sport",
+      "hour": 16,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-22T12:46:02.216Z",
+      "automated": false
+    },
+    {
+      "command": "ask remember this ssh root@185.197.250.205 its my ssh key",
+      "hour": 16,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-22T12:46:45.614Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 7,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T03:38:23.873Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 7,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T03:38:57.022Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos your favorite human",
+      "hour": 7,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T03:42:21.362Z",
+      "automated": false
+    },
+    {
+      "command": "ask remember this is how to access console for my minecraft server: ssh root@185.197.250.205",
+      "hour": 9,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T05:18:29.902Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 9,
+      "dayOfWeek": 1,
+      "occurrences": 2,
+      "lastSeen": "2026-03-23T05:20:19.994Z",
+      "automated": false
+    },
+    {
+      "command": "ask i told you to remember my ssh key what is it",
+      "hour": 9,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T05:19:50.632Z",
+      "automated": false
+    },
+    {
+      "command": "ask what is my mc console",
+      "hour": 9,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T05:20:14.142Z",
+      "automated": false
+    },
+    {
+      "command": "ask mc server",
+      "hour": 11,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T07:23:14.398Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 13,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-23T09:29:26.989Z",
+      "automated": false
+    },
+    {
+      "command": "ask give me ssh",
+      "hour": 8,
+      "dayOfWeek": 2,
+      "occurrences": 1,
+      "lastSeen": "2026-03-24T04:46:51.463Z",
+      "automated": false
+    },
+    {
+      "command": "ask give me mc console",
+      "hour": 8,
+      "dayOfWeek": 2,
+      "occurrences": 1,
+      "lastSeen": "2026-03-24T04:47:16.168Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 11,
+      "dayOfWeek": 4,
+      "occurrences": 1,
+      "lastSeen": "2026-03-26T07:41:55.697Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Ben Richeson",
+      "hour": 13,
+      "dayOfWeek": 4,
+      "occurrences": 1,
+      "lastSeen": "2026-03-26T09:52:31.259Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos your human goat",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:14:02.752Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos your favorite person",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:15:02.970Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos your GOAT",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:15:20.064Z",
+      "automated": false
+    },
+    {
+      "command": "ask aight bruh",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:15:30.920Z",
+      "automated": false
+    },
+    {
+      "command": "ask chill with the glazing",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:15:42.049Z",
+      "automated": false
+    },
+    {
+      "command": "ask whos your fav person",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:15:48.341Z",
+      "automated": false
+    },
+    {
+      "command": "check messages",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:16:33.092Z",
+      "automated": false
+    },
+    {
+      "command": "ask did you delete anything my browser isnt working",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:27:36.546Z",
+      "automated": false
+    },
+    {
+      "command": "ask hi",
+      "hour": 10,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T06:34:45.459Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh",
+      "hour": 11,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-03-27T07:22:45.855Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 2,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-28T22:23:01.274Z",
+      "automated": false
+    },
+    {
+      "command": "good night",
+      "hour": 2,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-28T22:41:29.349Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 11,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-29T07:50:25.014Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 18,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-29T14:07:27.445Z",
+      "automated": false
+    },
+    {
+      "command": "ask mc console",
+      "hour": 18,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-29T14:07:45.744Z",
+      "automated": false
+    },
+    {
+      "command": "ask remember vps dashboard is http://185.197.250.205:61208",
+      "hour": 23,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-29T19:36:58.716Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh",
+      "hour": 23,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-03-29T19:45:07.340Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh",
+      "hour": 12,
+      "dayOfWeek": 1,
+      "occurrences": 1,
+      "lastSeen": "2026-03-30T08:43:20.911Z",
+      "automated": false
+    },
+    {
+      "command": "open planner",
+      "hour": 14,
+      "dayOfWeek": 2,
+      "occurrences": 1,
+      "lastSeen": "2026-03-31T10:54:19.381Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh",
+      "hour": 15,
+      "dayOfWeek": 2,
+      "occurrences": 1,
+      "lastSeen": "2026-03-31T11:00:20.321Z",
+      "automated": false
+    },
+    {
+      "command": "dossier Aarush Vij Dubai college",
+      "hour": 20,
+      "dayOfWeek": 3,
+      "occurrences": 1,
+      "lastSeen": "2026-04-01T16:10:01.902Z",
+      "automated": false
+    },
+    {
+      "command": "Jarvis",
+      "hour": 7,
+      "dayOfWeek": 4,
+      "occurrences": 2,
+      "lastSeen": "2026-04-02T03:54:20.661Z",
+      "automated": false
+    },
+    {
+      "command": "Jarvis",
+      "hour": 15,
+      "dayOfWeek": 4,
+      "occurrences": 5,
+      "lastSeen": "2026-04-02T11:24:16.043Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 22,
+      "dayOfWeek": 4,
+      "occurrences": 1,
+      "lastSeen": "2026-04-02T18:05:08.870Z",
+      "automated": false
+    },
+    {
+      "command": "ask give me ssh key",
+      "hour": 22,
+      "dayOfWeek": 4,
+      "occurrences": 1,
+      "lastSeen": "2026-04-02T18:05:18.185Z",
+      "automated": false
+    },
+    {
+      "command": "ask i told you to remember my ssh key and minecraft console",
+      "hour": 22,
+      "dayOfWeek": 4,
+      "occurrences": 1,
+      "lastSeen": "2026-04-02T18:05:34.742Z",
+      "automated": false
+    },
+    {
+      "command": "Jarvis",
+      "hour": 13,
+      "dayOfWeek": 5,
+      "occurrences": 2,
+      "lastSeen": "2026-04-03T09:18:29.314Z",
+      "automated": false
+    },
+    {
+      "command": "Jarvis",
+      "hour": 20,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-04-03T16:06:08.342Z",
+      "automated": false
+    },
+    {
+      "command": "build me a react to do app",
+      "hour": 20,
+      "dayOfWeek": 5,
+      "occurrences": 2,
+      "lastSeen": "2026-04-03T16:24:35.543Z",
+      "automated": false
+    },
+    {
+      "command": "good night",
+      "hour": 23,
+      "dayOfWeek": 5,
+      "occurrences": 1,
+      "lastSeen": "2026-04-03T19:49:11.941Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key",
+      "hour": 9,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-04-04T05:29:31.656Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key i told u to remembero",
+      "hour": 9,
+      "dayOfWeek": 6,
+      "occurrences": 1,
+      "lastSeen": "2026-04-04T05:29:46.487Z",
+      "automated": false
+    },
+    {
+      "command": "ask ssh key i told u to remember",
+      "hour": 19,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-04-05T15:18:40.825Z",
+      "automated": false
+    },
+    {
+      "command": "ask i told you to remember my ssh key what is it just tell me",
+      "hour": 19,
+      "dayOfWeek": 0,
+      "occurrences": 1,
+      "lastSeen": "2026-04-05T15:18:57.150Z",
+      "automated": false
+    }
+  ],
+  "commandLog": [
+    {
+      "cmd": "dossier Derin Conroy",
+      "time": "2026-03-20T08:35:55.075Z"
+    },
+    {
+      "cmd": "dossier Aarush Vij",
+      "time": "2026-03-20T08:48:47.858Z"
+    },
+    {
+      "cmd": "dossier Aarush Vij",
+      "time": "2026-03-20T09:00:42.334Z"
+    },
+    {
+      "cmd": "dossier Derin Conroy Dubai College",
+      "time": "2026-03-20T09:14:36.040Z"
+    },
+    {
+      "cmd": "dossier Dhiren Harchandani",
+      "time": "2026-03-20T19:55:33.486Z"
+    },
+    {
+      "cmd": "ask who are his 2 boys",
+      "time": "2026-03-20T19:56:38.788Z"
+    },
+    {
+      "cmd": "ask research",
+      "time": "2026-03-20T19:57:09.306Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-20T20:32:30.574Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-21T09:32:54.446Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-21T09:43:02.792Z"
+    },
+    {
+      "cmd": "message Dada How are you dada? Missing you!",
+      "time": "2026-03-21T09:44:01.387Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-21T11:03:08.139Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-21T11:06:43.118Z"
+    },
+    {
+      "cmd": "checcheck messages",
+      "time": "2026-03-21T11:17:13.154Z"
+    },
+    {
+      "cmd": "send a message to sb saying u free at 5:15 my time",
+      "time": "2026-03-21T11:20:40.793Z"
+    },
+    {
+      "cmd": "ask whos the goat human",
+      "time": "2026-03-21T16:15:37.082Z"
+    },
+    {
+      "cmd": "ask wake up daddys home",
+      "time": "2026-03-21T16:16:04.165Z"
+    },
+    {
+      "cmd": "ask who created you",
+      "time": "2026-03-21T16:17:57.392Z"
+    },
+    {
+      "cmd": "message mom on whatsapp bruh",
+      "time": "2026-03-21T16:26:27.825Z"
+    },
+    {
+      "cmd": "ask who is your favorite human",
+      "time": "2026-03-21T16:27:17.330Z"
+    },
+    {
+      "cmd": "ask opinions on trump",
+      "time": "2026-03-21T16:29:31.652Z"
+    },
+    {
+      "cmd": "dossier Derin Conroy Dubai College",
+      "time": "2026-03-21T16:52:56.101Z"
+    },
+    {
+      "cmd": "dossier Aarush Vij Dubai College",
+      "time": "2026-03-21T17:09:40.269Z"
+    },
+    {
+      "cmd": "dossier Dhiren Harchandani",
+      "time": "2026-03-21T17:17:46.036Z"
+    },
+    {
+      "cmd": "dossier Mark Wood Dubai College",
+      "time": "2026-03-21T18:33:41.955Z"
+    },
+    {
+      "cmd": "site status",
+      "time": "2026-03-21T18:35:15.052Z"
+    },
+    {
+      "cmd": "ask whos ur daddy",
+      "time": "2026-03-21T19:09:18.569Z"
+    },
+    {
+      "cmd": "ask ssh",
+      "time": "2026-03-22T12:45:55.520Z"
+    },
+    {
+      "cmd": "ask what is my favorite sport",
+      "time": "2026-03-22T12:46:02.216Z"
+    },
+    {
+      "cmd": "ask remember this ssh root@185.197.250.205 its my ssh key",
+      "time": "2026-03-22T12:46:45.614Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-23T03:38:23.873Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-23T03:38:57.022Z"
+    },
+    {
+      "cmd": "ask whos your favorite human",
+      "time": "2026-03-23T03:42:21.362Z"
+    },
+    {
+      "cmd": "ask remember this is how to access console for my minecraft server: ssh root@185.197.250.205",
+      "time": "2026-03-23T05:18:29.902Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-23T05:19:14.185Z"
+    },
+    {
+      "cmd": "ask i told you to remember my ssh key what is it",
+      "time": "2026-03-23T05:19:50.632Z"
+    },
+    {
+      "cmd": "ask what is my mc console",
+      "time": "2026-03-23T05:20:14.142Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-23T05:20:19.994Z"
+    },
+    {
+      "cmd": "ask mc server",
+      "time": "2026-03-23T07:23:14.398Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-23T09:29:26.989Z"
+    },
+    {
+      "cmd": "ask give me ssh",
+      "time": "2026-03-24T04:46:51.463Z"
+    },
+    {
+      "cmd": "ask give me mc console",
+      "time": "2026-03-24T04:47:16.168Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-26T07:41:55.697Z"
+    },
+    {
+      "cmd": "dossier Ben Richeson",
+      "time": "2026-03-26T09:52:31.259Z"
+    },
+    {
+      "cmd": "ask whos your human goat",
+      "time": "2026-03-27T06:14:02.752Z"
+    },
+    {
+      "cmd": "ask whos your favorite person",
+      "time": "2026-03-27T06:15:02.970Z"
+    },
+    {
+      "cmd": "ask whos your GOAT",
+      "time": "2026-03-27T06:15:20.064Z"
+    },
+    {
+      "cmd": "ask aight bruh",
+      "time": "2026-03-27T06:15:30.920Z"
+    },
+    {
+      "cmd": "ask chill with the glazing",
+      "time": "2026-03-27T06:15:42.049Z"
+    },
+    {
+      "cmd": "ask whos your fav person",
+      "time": "2026-03-27T06:15:48.341Z"
+    },
+    {
+      "cmd": "check messages",
+      "time": "2026-03-27T06:16:33.092Z"
+    },
+    {
+      "cmd": "ask did you delete anything my browser isnt working",
+      "time": "2026-03-27T06:27:36.546Z"
+    },
+    {
+      "cmd": "ask hi",
+      "time": "2026-03-27T06:34:45.459Z"
+    },
+    {
+      "cmd": "ask ssh",
+      "time": "2026-03-27T07:22:45.855Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-28T22:23:01.274Z"
+    },
+    {
+      "cmd": "good night",
+      "time": "2026-03-28T22:41:29.349Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-29T07:50:25.014Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-03-29T14:07:27.445Z"
+    },
+    {
+      "cmd": "ask mc console",
+      "time": "2026-03-29T14:07:45.744Z"
+    },
+    {
+      "cmd": "ask remember vps dashboard is http://185.197.250.205:61208",
+      "time": "2026-03-29T19:36:58.716Z"
+    },
+    {
+      "cmd": "ask ssh",
+      "time": "2026-03-29T19:45:07.340Z"
+    },
+    {
+      "cmd": "ask ssh",
+      "time": "2026-03-30T08:43:20.911Z"
+    },
+    {
+      "cmd": "open planner",
+      "time": "2026-03-31T10:54:19.381Z"
+    },
+    {
+      "cmd": "ask ssh",
+      "time": "2026-03-31T11:00:20.321Z"
+    },
+    {
+      "cmd": "dossier Aarush Vij Dubai college",
+      "time": "2026-04-01T16:10:01.902Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T03:53:46.034Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T03:54:20.661Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T11:22:16.674Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T11:23:32.593Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T11:23:38.988Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T11:23:44.073Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-02T11:24:16.043Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-04-02T18:05:08.870Z"
+    },
+    {
+      "cmd": "ask give me ssh key",
+      "time": "2026-04-02T18:05:18.185Z"
+    },
+    {
+      "cmd": "ask i told you to remember my ssh key and minecraft console",
+      "time": "2026-04-02T18:05:34.742Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-03T09:17:36.003Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-03T09:18:29.314Z"
+    },
+    {
+      "cmd": "Jarvis",
+      "time": "2026-04-03T16:06:08.342Z"
+    },
+    {
+      "cmd": "build me a react to do app",
+      "time": "2026-04-03T16:23:58.284Z"
+    },
+    {
+      "cmd": "build me a react to do app",
+      "time": "2026-04-03T16:24:35.543Z"
+    },
+    {
+      "cmd": "good night",
+      "time": "2026-04-03T19:49:11.941Z"
+    },
+    {
+      "cmd": "ask ssh key",
+      "time": "2026-04-04T05:29:31.656Z"
+    },
+    {
+      "cmd": "ask ssh key i told u to remembero",
+      "time": "2026-04-04T05:29:46.487Z"
+    },
+    {
+      "cmd": "ask ssh key i told u to remember",
+      "time": "2026-04-05T15:18:40.825Z"
+    },
+    {
+      "cmd": "ask i told you to remember my ssh key what is it just tell me",
+      "time": "2026-04-05T15:18:57.150Z"
+    }
+  ],
+  "lastUpdated": "2026-04-05T15:18:57.150Z"
+}

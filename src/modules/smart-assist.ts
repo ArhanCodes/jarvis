@@ -96,10 +96,9 @@ const COMMAND_EXAMPLES: Array<{ label: string; keywords: string[]; module: strin
   { label: 'site status', keywords: ['site', 'sites', 'apps', 'online', 'status', 'check', 'running', 'up'], module: 'site-monitor' },
   { label: 'is <site> online', keywords: ['online', 'down', 'check', 'ping', 'running', 'working'], module: 'site-monitor' },
 
-  // Research (Jericho)
+  // Research
   { label: 'research <topic>', keywords: ['research', 'papers', 'academic', 'study', 'investigate'], module: 'research' },
   { label: 'find papers on <topic>', keywords: ['papers', 'articles', 'literature', 'arxiv', 'scholar'], module: 'research' },
-  { label: 'jericho <topic>', keywords: ['jericho', 'research', 'agent'], module: 'research' },
 
   // WhatsApp
   { label: 'send whatsapp to <name>: <msg>', keywords: ['whatsapp', 'message', 'send', 'text', 'chat'], module: 'whatsapp' },
@@ -340,7 +339,7 @@ const NLU_MAPPINGS: Array<{
     ],
     module: 'system-control', action: 'eject',
   },
-  // ── Research (Jericho) ──
+  // ── Research ──
   {
     patterns: [
       /(?:find|look\s+up|search\s+for)\s+(?:academic\s+)?(?:papers?|research|articles?|studies)\s+(?:on|about|regarding)\s+(.+)/i,
@@ -639,7 +638,7 @@ export class SmartAssistModule implements JarvisModule {
       if (/^(weather|forecast|news|headlines)/.test(lower)) usedModules.add('weather-news');
       if (/^(good\s+morning|good\s+night|routines?)/.test(lower)) usedModules.add('smart-routines');
       if (/^(read\s+screen|summarize\s+screen|screen|ocr)/.test(lower)) usedModules.add('screen-awareness');
-      if (/^(research|jericho|find\s+papers|academic\s+search)/.test(lower)) usedModules.add('research');
+      if (/^(research|find\s+papers|academic\s+search)/.test(lower)) usedModules.add('research');
       if (/^(whatsapp|send\s+whatsapp|message.*whatsapp)/.test(lower)) usedModules.add('whatsapp');
       if (/^(browse|google|read\s+page|screenshot|close\s+browser|go\s+to)/.test(lower)) usedModules.add('browser-control');
     }

@@ -43,10 +43,16 @@ const SERVICES: Service[] = [
   },
   {
     name: 'Rewoven',
-    description: 'social media app',
+    description: 'sustainable fashion app',
     endpoints: [
-      { url: 'https://apps.apple.com/app/rewoven/id6744387218', label: 'App Store' },
-      { url: 'https://play.google.com/store/apps/details?id=com.rewoven.app', label: 'Google Play' },
+      { url: 'https://rewovenapp.com', label: 'rewovenapp.com' },
+    ],
+  },
+  {
+    name: 'JARVIS',
+    description: 'AI assistant web interface',
+    endpoints: [
+      { url: 'https://jarvis.arhan.dev', label: 'jarvis.arhan.dev' },
     ],
   },
 ];
@@ -109,6 +115,7 @@ const SERVICE_ALIASES: Record<string, string> = {
   'arhan': 'Website',
   'friday': 'FRIDAY',
   'rewoven': 'Rewoven',
+  'jarvis': 'JARVIS',
 };
 
 function findService(query: string): Service | undefined {

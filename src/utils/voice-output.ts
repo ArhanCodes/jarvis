@@ -277,14 +277,12 @@ export async function speak(text: string): Promise<void> {
   if (config.provider === 'elevenlabs') {
     const ok = await speakElevenLabs(cleaned);
     if (ok || speechAborted) return;
-    // ElevenLabs failed (quota?) — fall through to Edge TTS
   }
 
   // Try Edge TTS
   if (config.provider === 'elevenlabs' || config.provider === 'edge-tts') {
     const ok = await speakEdgeTts(cleaned);
     if (ok || speechAborted) return;
-    // Edge TTS failed — fall through to macOS
   }
 
   await speakMacOS(cleaned);

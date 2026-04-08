@@ -2,7 +2,7 @@
 
 **Just A Rather Very Intelligent System**
 
-A macOS AI assistant with voice control, screen awareness, browser automation, and multi-device support via Apple Watch and iPhone. Talk to it, type to it, or let it watch your screen — JARVIS understands context and takes action.
+A macOS AI assistant with voice control, screen awareness, browser automation, and connection across Apple Watch and iPhone via [AIM](https://github.com/arhancodes/aim)
 
 ```
        ██╗ █████╗ ██████╗ ██╗   ██╗██╗███████╗
@@ -13,6 +13,12 @@ A macOS AI assistant with voice control, screen awareness, browser automation, a
    ╚════╝ ╚═╝  ╚═╝╚═╝  ╚═╝  ╚═══╝  ╚═╝╚══════╝
 ```
 
+
+## Docs
+
+https://jarvis.arhan.dev/docs
+
+
 ## Quick Start
 
 ```bash
@@ -21,7 +27,7 @@ npm install
 npm run dev
 ```
 
-Say "Jarvis" to activate voice control, or type commands directly.
+Say "Jarvis" to activate voice control, or type commands directly
 
 ---
 
@@ -57,7 +63,7 @@ Say "Jarvis" to activate voice control, or type commands directly.
 
 ## Voice Assistant
 
-JARVIS has an always-on voice assistant with wake word detection. Say "Jarvis" and it starts listening — no button press needed.
+JARVIS has an always-on voice assistant with wake word detection. Say "Jarvis" and it starts listening
 
 ```
 jarvis> voice on
@@ -76,15 +82,15 @@ jarvis> voice on
   (runs good night routine — lowers volume, enables DND, locks screen)
 ```
 
-Uses Apple's **SFSpeechRecognizer** for on-device speech recognition and **Edge TTS** or **ElevenLabs** for spoken responses. Fully on-device wake word detection, free, no cloud dependency for recognition.
+Uses Apple's SFSpeechRecognizer for on-device speech recognition and Edge TTS/ElevenLabs for spoken responses
 
-**Requires:** macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
+> Requires macOS 13+ with Xcode Command Line Tools (`xcode-select --install`).
 
 ---
 
 ## Conversation Engine
 
-JARVIS uses a multi-turn conversation engine that understands context, executes actions mid-conversation, and remembers facts across sessions.
+JARVIS uses a multi-turn conversation engine that understands context, executes actions mid-conversation, and remembers facts across sessions
 
 ```
 jarvis> turn on dark mode and set volume to 30
@@ -104,7 +110,7 @@ jarvis> remember that my project deadline is March 20th
   ✓ Noted — I'll remember your project deadline is March 20th.
 ```
 
-Powered by **Claude API**. The conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
+Powered by Claude, the conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
 
 ---
 
@@ -152,7 +158,7 @@ jarvis> screenshot
   ✓ Screenshot saved to jarvis-screenshot-1710432000.png
 ```
 
-Full browser automation powered by Playwright — navigate, search, click elements, fill forms, read page content, and take screenshots.
+Full browser automation powered by Playwright. Navigate, search, click elements, fill forms, read page content, and take screenshots
 
 | Command | What it does |
 |---------|-------------|
@@ -173,7 +179,7 @@ jarvis> run ls -la
   ✓ (full directory listing)
 ```
 
-Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked.
+Dangerous commands (`rm -rf /`, `sudo rm`, `mkfs`, `dd`, `fork bombs`, `chmod 777`, etc.) are automatically blocked
 
 | Command | What it does |
 |---------|-------------|
@@ -221,7 +227,7 @@ jarvis> delete ~/Desktop/junk.txt
   ✓ Moved to Trash: /Users/you/Desktop/junk.txt
 ```
 
-File search uses **Spotlight** (`mdfind`) for instant results. Delete moves files to Trash (always recoverable).
+File search uses Spotlight (`mdfind`) for instant results. Delete moves files to Trash 
 
 | Command | What it does |
 |---------|-------------|
@@ -272,9 +278,9 @@ jarvis> stopwatch
   ✓ Stopwatch started! Type "stopwatch" again to stop.
 ```
 
-When timers fire, you get a **macOS notification** with sound + a terminal alert.
+When timers fire, you get a notification with sound + a terminal alert
 
-Time formats: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a bare number (assumed minutes).
+Time formats: `30s`, `5 min`, `1h30m`, `2.5 hours`, `1:30`, or just a bare number (assumed minutes)
 
 | Command | What it does |
 |---------|-------------|
@@ -380,7 +386,7 @@ jarvis> play "Daft Punk"
   ✓ Searching Spotify for "Daft Punk"
 ```
 
-Auto-detects whether Spotify or Apple Music is running.
+Auto-detects whether Spotify or Apple Music is running
 
 | Command | What it does |
 |---------|-------------|
@@ -530,7 +536,7 @@ jarvis> explain package.json
 
 ```
 
-Uses **Claude API** for fast, accurate responses. If the API is unavailable, all other JARVIS features still work normally.
+Uses Claude API for responses. If the API is unavailable, all other JARVIS features still work normally.
 
 | Command | What it does |
 |---------|-------------|
@@ -638,7 +644,7 @@ A compiled Rust binary (`rust-sidecar/`) that accelerates performance-critical o
 
 ## Multi-Device Support
 
-JARVIS connects to Apple Watch and iPhone via **AIM** (Advanced Idea Mechanics), a WebSocket relay server.
+JARVIS connects to Apple Watch and iPhone via [AIM](https://github.com/arhancodes/aim)
 
 | Device | What it does |
 |--------|-------------|
@@ -646,7 +652,7 @@ JARVIS connects to Apple Watch and iPhone via **AIM** (Advanced Idea Mechanics),
 | **iPhone** | Send commands and receive responses via companion app |
 | **Apple Watch** | Quick commands from your wrist, haptic feedback |
 
-The menubar app shows JARVIS status at a glance — running state, voice mode, and last command processed.
+The menubar app shows JARVIS status at a glance
 
 ---
 

@@ -34,3 +34,6 @@ menubar/JarvisMenubar
 plan.md
 *.docx
 *.xcuserstate
+
+# Rust build artifacts
+rust-sidecar/target/

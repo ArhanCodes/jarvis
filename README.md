@@ -34,7 +34,7 @@ Say "Jarvis" to activate voice control, or type commands directly.
 | **Rust sidecar** | Native Rust binary for sub-millisecond vector search, fuzzy matching (Levenshtein), and trace analytics |
 | **Plugin system** | @RegisterModule() decorator, hot-reload, external plugin packages |
 | **Security monitoring** | Always-on breach monitor, network guardian, threat detection |
-| **Conversational AI** | Multi-turn conversations powered by Claude API with Ollama fallback — streams responses, executes actions mid-conversation, remembers context |
+| **Conversational AI** | Multi-turn conversations powered by Claude API — streams responses, executes actions mid-conversation, remembers context |
 | **Voice assistant** | Always-on wake word detection ("Jarvis"), on-device speech recognition, text-to-speech responses via Edge TTS or ElevenLabs |
 | **Screen awareness** | OCR-based screen reading — JARVIS can see what's on your screen and respond to it |
 | **Screen interaction** | Process selected text with AI — paraphrase, rewrite, fix grammar, translate |
@@ -104,7 +104,7 @@ jarvis> remember that my project deadline is March 20th
   ✓ Noted — I'll remember your project deadline is March 20th.
 ```
 
-Powered by **Claude API** with automatic **Ollama** fallback for offline use. The conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
+Powered by **Claude API**. The conversation engine detects `[ACTION:]` tags in responses and executes them in real time, supports `[REMEMBER:]` for persistent memory, and maintains full conversation context.
 
 ---
 
@@ -528,21 +528,15 @@ jarvis> summarize ~/code/main.py
 jarvis> explain package.json
   This is a Node.js project configuration file...
 
-jarvis> models
-  ✓ Available models:
-    llama3:latest (4.7 GB)
-    mistral:latest (4.1 GB)
 ```
 
-Uses **Claude API** by default for fast, accurate responses. Falls back to **Ollama** for fully offline, local AI. If neither is available, all other JARVIS features still work normally.
+Uses **Claude API** for fast, accurate responses. If the API is unavailable, all other JARVIS features still work normally.
 
 | Command | What it does |
 |---------|-------------|
 | `ask <question>` / `ai <prompt>` | Chat with AI |
 | `summarize <file or topic>` | Summarize a file or topic |
 | `explain <file or topic>` | Explain code or a concept |
-| `models` | List installed Ollama models |
-| `use model <name>` | Switch active model |
 | `clear chat` / `new conversation` | Reset conversation history |
 | `ai status` | Check LLM connection |
 
@@ -777,7 +771,7 @@ User Input → Variable Expansion → Alias Expansion → Pattern Parser → Exe
                                                           ↓
                                                     Intelligence Layer (traces, prediction, context)
                                                           ↓
-                                                    Conversation Engine (Claude / Ollama)
+                                                    Conversation Engine (Claude API)
 ```
 
 The core parser uses **no AI/LLM** — it's a seven-phase engine:
@@ -834,8 +828,7 @@ jarvis/
 │   │   ├── shell.ts               # Safe child_process wrapper + deny-list
 │   │   ├── osascript.ts           # AppleScript helpers
 │   │   ├── formatter.ts           # Chalk colored terminal output
-│   │   ├── ollama.ts              # Ollama HTTP client (streaming)
-│   │   ├── llm.ts                 # Hybrid LLM provider (Claude + Ollama)
+│   │   ├── llm.ts                 # LLM provider (Claude API)
 │   │   ├── browser-manager.ts     # Playwright browser lifecycle
 │   │   ├── voice-output.ts        # TTS via Edge TTS / ElevenLabs
 │   │   ├── platform.ts            # OS detection (macOS / Linux)
@@ -871,7 +864,7 @@ jarvis/
 | Media Control | `media-control.ts` | Spotify and Apple Music control |
 | Workflows | `workflow.ts` | Multi-step workflows and macOS Shortcuts |
 | Personality | `personality.ts` | Greetings, jokes, and conversation |
-| AI Chat | `ai-chat.ts` | Chat with Claude or Ollama, summarize, explain |
+| AI Chat | `ai-chat.ts` | Chat with Claude, summarize, explain |
 | Smart Assist | `smart-assist.ts` | NLU mapping, suggestions, and usage analytics |
 | Browser Control | `browser-control.ts` | Full browser automation via Playwright |
 | WhatsApp | `whatsapp.ts` | Send and read WhatsApp messages |
@@ -930,8 +923,7 @@ Everything else is Node.js built-ins (`readline`, `child_process`, `os`, `fs`) a
 - **macOS** (tested on macOS 14+ Sonoma, Apple Silicon)
 - **Node.js 20+**
 - **Xcode Command Line Tools** (for voice commands): `xcode-select --install`
-- **Ollama** (optional, for offline AI): [ollama.com](https://ollama.com) — `ollama serve` then `ollama pull llama3`
-- **Claude API key** (optional, for cloud AI): set in `config/llm-config.json`
+- **Claude API key**: set in `config/llm-config.json`
 - **Rust** (optional, for sidecar): `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
 
 ## Build & Install

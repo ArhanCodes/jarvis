@@ -2,8 +2,7 @@ import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } fr
 import { getBrowser, closeBrowser, isOpen } from '../utils/browser-manager.js';
 import { fmt } from '../utils/formatter.js';
 import { execSync } from 'child_process';
-import { generate, isOllamaRunning } from '../utils/ollama.js';
-import { getActiveModel } from './ai-chat.js';
+import { isLLMAvailable, llmStreamChat } from '../utils/llm.js';
 
 // ── WhatsApp Module ──
 // Send and read WhatsApp messages via WhatsApp Web + Playwright.
@@ -138,10 +137,10 @@ export class WhatsAppModule implements JarvisModule {
     let finalMessage = message;
     if (this.isTaskInstruction(message, raw)) {
       try {
-        if (await isOllamaRunning()) {
+        if (await isLLMAvailable()) {
           process.stdout.write(fmt.dim(`  Composing message...\n`));
           const prompt = `Write a short, casual WhatsApp message to ${contact} that does the following: ${message}.\nOutput ONLY the message text. No quotes, no labels, no explanation.`;
-          const generated = await generate(getActiveModel(), prompt);
+          const generated = await llmStreamChat([{ role: 'user', content: prompt }], 'You are a helpful assistant.', () => {});
           if (generated?.trim()) {
             finalMessage = generated.trim();
             console.log(fmt.dim(`  [composed] "${finalMessage}"`));

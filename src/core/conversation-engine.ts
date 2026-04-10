@@ -1,7 +1,6 @@
 import type { CommandResult, ModuleName } from './types.js';
 import { llmStreamChat, isLLMAvailable, getActiveLLMProvider, getLastUsedLabel } from '../utils/llm.js';
-import { isOllamaRunning, generate } from '../utils/ollama.js';
-import { getActiveModel } from '../modules/ai-chat.js';
+import { llmStreamChat as generateText } from '../utils/llm.js';
 import { registry } from './registry.js';
 import { execute } from './executor.js';
 import { buildMemoryContext, addConversationEntry, getRecentConversation, getAllConversations, getSummaries, addSummary, clearConversation, setConversations, addFact, type MemoryFact } from './memory.js';
@@ -96,7 +95,7 @@ class ConversationEngine {
     const llmAvailable = await isLLMAvailable();
     if (!llmAvailable) {
       return {
-        text: "I'd answer that, but no LLM is configured. Set up Claude API in config/llm-config.json or start Ollama with \"ollama serve\".",
+        text: "I'd answer that, but no LLM is configured. Set up Claude API in config/llm-config.json.",
         commandsExecuted: [],
         memoriesStored: [],
         streamed: false,
@@ -462,8 +461,11 @@ IMPORTANT RULES:
     const summaryPrompt = `Summarize this conversation in 2-3 concise sentences. Focus on: user preferences, facts learned, key topics discussed, and commands executed.\n\n${transcript}`;
 
     try {
-      const ollamaModel = getActiveModel();
-      const summary = await generate(ollamaModel, summaryPrompt);
+      const summary = await generateText(
+        [{ role: 'user', content: summaryPrompt }],
+        'You are a conversation summarizer. Be concise.',
+        () => {},
+      );
       const range: [number, number] = [
         toSummarize[0].timestamp,
         toSummarize[toSummarize.length - 1].timestamp,

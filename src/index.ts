@@ -710,7 +710,7 @@ export function boot(): void {
         return;
       }
 
-      // Genuine conversation — route to AI engine (Ollama)
+      // Genuine conversation — route to AI engine (Claude)
       try {
         process.stdout.write(fmt.dim(`  [${conversationEngine.getModel()}]\n`));
         process.stdout.write('  ');
@@ -735,7 +735,7 @@ export function boot(): void {
         recordCommand(input, { success: true, message: response.text, streamed: true });
         return;
       } catch {
-        // Ollama not running — fall back to suggestions
+        // AI unavailable — fall back to suggestions
         const suggestions = getSuggestions(input);
         if (suggestions.length > 0) {
           console.log(fmt.warn(`I didn't understand "${input}". Did you mean:`));

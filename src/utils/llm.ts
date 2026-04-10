@@ -1,24 +1,19 @@
-import { isOllamaRunning, chatStream as ollamaChatStream, OllamaChatMessage } from './ollama.js';
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ── Hybrid LLM Provider ──
-// Abstracts between Claude API and Ollama. Uses Claude by default, falls back to Ollama.
-// Benefits: Claude is faster + more accurate; Ollama works offline.
+// ── LLM Provider (Claude API) ──
 
 interface LLMConfig {
-  provider: 'claude' | 'ollama' | 'auto';
+  provider: string;
   claudeApiKey?: string;
-  ollamaModel?: string;
   claudeModel?: string;
 }
 
 let config: LLMConfig = {
-  provider: 'auto',
-  ollamaModel: 'llama3',
+  provider: 'claude',
   claudeModel: 'claude-3-5-sonnet-20241022',
 };
 
@@ -50,7 +45,7 @@ async function claudeStreamChat(
   onToken: (token: string) => void,
 ): Promise<string> {
   if (!config.claudeApiKey) {
-    throw new Error('Claude API key not configured. Set CLAUDE_API_KEY in config/llm-config.json');
+    throw new Error('Claude API key not configured. Set claudeApiKey in config/llm-config.json');
   }
 
   const response = await fetch('https://api.anthropic.com/v1/messages', {
@@ -79,7 +74,7 @@ async function claudeStreamChat(
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let fullText = '';
-  let sseBuffer = '';  // Buffer for incomplete SSE lines across chunks
+  let sseBuffer = '';
 
   try {
     while (true) {
@@ -88,9 +83,7 @@ async function claudeStreamChat(
 
       sseBuffer += decoder.decode(value, { stream: true });
 
-      // Process complete lines only — SSE events are separated by \n\n
       const lines = sseBuffer.split('\n');
-      // Keep the last (possibly incomplete) line in the buffer
       sseBuffer = lines.pop() || '';
 
       for (const line of lines) {
@@ -120,19 +113,6 @@ async function claudeStreamChat(
   return fullText;
 }
 
-async function selectProvider(): Promise<'claude' | 'ollama'> {
-  if (config.provider === 'claude') return 'claude';
-  if (config.provider === 'ollama') return 'ollama';
-
-  // Auto mode: prefer Claude if API key is set, else Ollama
-  if (config.claudeApiKey) return 'claude';
-  if (await isOllamaRunning()) return 'ollama';
-
-  // Both unavailable, prefer Claude (will error with better message)
-  return 'claude';
-}
-
-// Track what was actually used in the last call
 let lastUsedLabel = '';
 
 export function getLastUsedLabel(): string {
@@ -144,28 +124,16 @@ export async function llmStreamChat(
   systemPrompt: string,
   onToken: (token: string) => void,
 ): Promise<string> {
-  const provider = await selectProvider();
-
-  // Always use Claude — no Ollama fallback
   lastUsedLabel = 'Claude (via API)';
-  try {
-    return await claudeStreamChat(messages, systemPrompt, onToken);
-  } catch (err) {
-    console.error('[JARVIS] Claude API error:', (err as Error).message);
-    throw err;
-  }
+  return claudeStreamChat(messages, systemPrompt, onToken);
 }
 
 export async function isLLMAvailable(): Promise<boolean> {
-  if (config.claudeApiKey) return true;
-  return isOllamaRunning();
+  return !!config.claudeApiKey;
 }
 
 export function getActiveLLMProvider(): string {
-  if (config.provider === 'auto') {
-    return config.claudeApiKey ? 'Claude (via API)' : 'Ollama (local)';
-  }
-  return config.provider === 'claude' ? 'Claude (via API)' : 'Ollama (local)';
+  return 'Claude (via API)';
 }
 
 export function getLLMConfig(): LLMConfig {
@@ -176,6 +144,6 @@ export function setClaudeApiKey(key: string): void {
   config.claudeApiKey = key;
 }
 
-export function setLLMProvider(provider: 'claude' | 'ollama' | 'auto'): void {
+export function setLLMProvider(provider: string): void {
   config.provider = provider;
 }

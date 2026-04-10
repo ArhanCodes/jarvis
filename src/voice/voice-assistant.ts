@@ -12,8 +12,7 @@ import { tryNaturalLanguageMapping, getSuggestions, isLikelyCommandAttempt } fro
 import { setLast } from '../core/context.js';
 import { recordCommand } from '../core/history.js';
 import type { CommandResult } from '../core/types.js';
-import { getLastStreamedText, getActiveModel } from '../modules/ai-chat.js';
-import { chatStream, isOllamaRunning, type OllamaChatMessage } from '../utils/ollama.js';
+import { getLastStreamedText } from '../modules/ai-chat.js';
 import { reportState, reportCommand } from '../utils/status-reporter.js';
 import { conversationEngine } from '../core/conversation-engine.js';
 import { ScreenWatcher } from '../modules/screen-watcher.js';

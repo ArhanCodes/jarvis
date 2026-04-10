@@ -1,7 +1,6 @@
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { osascript, getFrontmostApp, activateApp } from '../utils/osascript.js';
-import { generate, isOllamaRunning } from '../utils/ollama.js';
-import { getActiveModel } from './ai-chat.js';
+import { llmStreamChat, isLLMAvailable } from '../utils/llm.js';
 import { fmt } from '../utils/formatter.js';
 import { execSync } from 'child_process';
 
@@ -99,10 +98,10 @@ export class ScreenInteractModule implements JarvisModule {
   }
 
   private async processSelectedText(intent: string, promptPrefix: string): Promise<CommandResult> {
-    // Check Ollama
-    const ollamaUp = await isOllamaRunning();
-    if (!ollamaUp) {
-      return { success: false, message: 'Ollama is not running. Cannot process text.', voiceMessage: 'Ollama is not running.' };
+    // Check LLM availability
+    const llmUp = await isLLMAvailable();
+    if (!llmUp) {
+      return { success: false, message: 'Claude API is not configured. Cannot process text.', voiceMessage: 'AI is not available.' };
     }
 
     // 1. Remember which app is focused
@@ -147,7 +146,11 @@ export class ScreenInteractModule implements JarvisModule {
     let result: string;
     try {
       process.stdout.write(fmt.dim('  Processing...\n'));
-      result = await generate(getActiveModel(), promptPrefix + selectedText);
+      result = await llmStreamChat(
+        [{ role: 'user', content: promptPrefix + selectedText }],
+        'You are a helpful text processing assistant. Only output the processed text, no explanations.',
+        () => {},
+      );
       if (!result?.trim()) {
         this.restoreClipboard(originalClipboard);
         return { success: false, message: 'AI returned empty result.', voiceMessage: 'The AI returned an empty result.' };

@@ -2,8 +2,7 @@ import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } fr
 import { registry } from '../core/registry.js';
 import { getSessionInfo } from '../core/context.js';
 import { getAllFacts, searchFacts, removeFact, addFact } from '../core/memory.js';
-import { isOllamaRunning, generate } from '../utils/ollama.js';
-import { getActiveModel } from './ai-chat.js';
+import { isLLMAvailable, llmStreamChat } from '../utils/llm.js';
 
 function pickRandom(arr: string[]): string {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -443,7 +442,7 @@ export class PersonalityModule implements JarvisModule {
   }
 
   private async parseAndStoreFact(fact: string): Promise<void> {
-    const running = await isOllamaRunning();
+    const running = await isLLMAvailable();
     if (!running) {
       // Simple fallback: store raw
       const key = fact.toLowerCase().replace(/[^a-z0-9]+/g, '.').replace(/^\.+|\.+$/g, '').slice(0, 50);
@@ -452,7 +451,6 @@ export class PersonalityModule implements JarvisModule {
     }
 
     try {
-      const model = getActiveModel();
       const prompt = `Extract a structured memory from this statement. Respond with ONLY a single line in this exact format:
 category|key|value
 
@@ -464,7 +462,7 @@ Statement: "${fact}"
 
 Response (one line, format: category|key|value):`;
 
-      const response = await generate(model, prompt);
+      const response = await llmStreamChat([{ role: 'user', content: prompt }], 'You are a helpful assistant.', () => {});
       const line = response.trim().split('\n')[0];
       const parts = line.split('|').map(s => s.trim());
 

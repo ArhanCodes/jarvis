@@ -1,8 +1,7 @@
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { run } from '../utils/shell.js';
 import { fmt } from '../utils/formatter.js';
-import { chatStream, isOllamaRunning, type OllamaChatMessage } from '../utils/ollama.js';
-import { getActiveModel } from './ai-chat.js';
+import { isLLMAvailable, llmStreamChat } from '../utils/llm.js';
 import { conversationEngine } from '../core/conversation-engine.js';
 import { tmpdir } from 'os';
 import { join } from 'path';
@@ -261,19 +260,14 @@ export class ScreenAwarenessModule implements JarvisModule {
   }
 
   private async askOllamaAboutScreen(screenText: string, question: string): Promise<CommandResult> {
-    const ollamaUp = await isOllamaRunning();
-    if (!ollamaUp) {
-      return { success: true, message: `Screen text (Ollama not running for summary):\n${screenText.slice(0, 1500)}` };
+    const llmUp = await isLLMAvailable();
+    if (!llmUp) {
+      return { success: true, message: `Screen text (Claude API is not configured for summary):\n${screenText.slice(0, 1500)}` };
     }
 
-    const model = getActiveModel();
     const truncText = screenText.length > 3000 ? screenText.slice(0, 3000) : screenText;
 
-    const messages: OllamaChatMessage[] = [
-      {
-        role: 'system',
-        content: 'You are JARVIS, a witty and intelligent AI assistant. Analyze the screen content and answer concisely (2-3 sentences). Be specific about what you see. No markdown.',
-      },
+    const messages: {role: 'user'|'assistant', content: string}[] = [
       {
         role: 'user',
         content: `${question}\n\nScreen content:\n${truncText}`,
@@ -281,10 +275,10 @@ export class ScreenAwarenessModule implements JarvisModule {
     ];
 
     try {
-      process.stdout.write(fmt.dim(`  [${model}]\n`));
+      process.stdout.write(fmt.dim(`  [llm]\n`));
       process.stdout.write('  ');
 
-      const fullResponse = await chatStream(model, messages, (token: string) => {
+      const fullResponse = await llmStreamChat(messages, 'You are JARVIS, a witty and intelligent AI assistant. Analyze the screen content and answer concisely (2-3 sentences). Be specific about what you see. No markdown.', (token: string) => {
         process.stdout.write(token);
       });
 

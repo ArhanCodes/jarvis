@@ -71,7 +71,7 @@ const COMMAND_EXAMPLES: Array<{ label: string; keywords: string[]; module: strin
   { label: 'ask <question>', keywords: ['ask', 'ai', 'chat', 'question', 'answer'], module: 'ai-chat' },
   { label: 'summarize <file>', keywords: ['summarize', 'summary', 'tldr', 'overview'], module: 'ai-chat' },
   { label: 'explain <file>', keywords: ['explain', 'code', 'understand', 'describe'], module: 'ai-chat' },
-  { label: 'models', keywords: ['models', 'ollama', 'llm', 'ai'], module: 'ai-chat' },
+  { label: 'ai status', keywords: ['models', 'llm', 'ai', 'claude'], module: 'ai-chat' },
 
   // Personality
   { label: 'hello / hey', keywords: ['hello', 'hi', 'hey', 'greetings', 'morning'], module: 'personality' },

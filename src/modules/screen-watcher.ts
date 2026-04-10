@@ -1,6 +1,5 @@
 import { captureScreenText } from './screen-awareness.js';
-import { generate, isOllamaRunning } from '../utils/ollama.js';
-import { getActiveModel } from './ai-chat.js';
+import { isLLMAvailable, llmStreamChat } from '../utils/llm.js';
 import { fmt } from '../utils/formatter.js';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -104,12 +103,13 @@ export class ScreenWatcher {
 
       this.lastOcrText = newText;
 
-      // Generate summary only if Ollama is up
-      const ollamaUp = await isOllamaRunning();
-      if (ollamaUp) {
-        const model = getActiveModel();
-        const summary = await generate(model,
-          `Summarize what's on this screen in 1-2 sentences. Focus on: which app is open, what the user is working on.\n\nScreen content:\n${newText.slice(0, 2000)}`
+      // Generate summary only if LLM is available
+      const llmUp = await isLLMAvailable();
+      if (llmUp) {
+        const summary = await llmStreamChat(
+          [{ role: 'user', content: `Summarize what's on this screen in 1-2 sentences. Focus on: which app is open, what the user is working on.\n\nScreen content:\n${newText.slice(0, 2000)}` }],
+          'You are a helpful assistant.',
+          () => {},
         );
         if (summary?.trim()) this.lastScreenSummary = summary.trim();
       }
@@ -200,15 +200,13 @@ export class ScreenWatcher {
 
     if (!filteredNotes.trim()) return;
 
-    // ── Use Ollama to find upcoming events in today's notes ──
+    // ── Use LLM to find upcoming events in today's notes ──
     try {
-      const ollamaUp = await isOllamaRunning();
-      if (!ollamaUp) return;
+      const llmUp = await isLLMAvailable();
+      if (!llmUp) return;
 
-      const model = getActiveModel();
-
-      const triageResult = await generate(model,
-        `Current time: ${timeStr}. Today is ${dayStr}.
+      const triageResult = await llmStreamChat(
+        [{ role: 'user', content: `Current time: ${timeStr}. Today is ${dayStr}.
 
 Below are ONLY today's uncompleted items from the user's notes:
 
@@ -226,7 +224,9 @@ RULES:
 - If no items match, respond with exactly: NONE
 
 Format: ALERT: Sir, you have "[event name]" at [start time].
-If nothing: NONE`
+If nothing: NONE` }],
+        'You are a helpful assistant.',
+        () => {},
       );
 
       if (triageResult?.trim() && triageResult.trim() !== 'NONE') {

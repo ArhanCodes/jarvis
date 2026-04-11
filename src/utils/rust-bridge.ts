@@ -48,14 +48,15 @@ export async function isSidecarAvailable(): Promise<boolean> {
 
 function findBinary(): string | null {
   // Look for the compiled binary relative to project root
-  const fromDist = join(__dirname, '..', '..');      // dist/utils -> dist
-  const fromSrc = join(__dirname, '..', '..', '..'); // dist/utils -> project root
+  const cwd = process.cwd();
+  const fromDir = join(__dirname, '..', '..');
+  const fromDir2 = join(__dirname, '..', '..', '..');
   const candidates = [
-    join(fromSrc, 'rust-sidecar', 'target', 'release', 'jarvis-core'),
-    join(fromSrc, 'rust-sidecar', 'target', 'debug', 'jarvis-core'),
-    join(fromDist, 'rust-sidecar', 'target', 'release', 'jarvis-core'),
-    join(fromDist, 'rust-sidecar', 'target', 'debug', 'jarvis-core'),
-    join(fromSrc, 'bin', 'jarvis-core'),
+    join(cwd, 'rust-sidecar', 'target', 'release', 'jarvis-core'),
+    join(cwd, 'rust-sidecar', 'target', 'debug', 'jarvis-core'),
+    join(fromDir, 'rust-sidecar', 'target', 'release', 'jarvis-core'),
+    join(fromDir2, 'rust-sidecar', 'target', 'release', 'jarvis-core'),
+    join(cwd, 'bin', 'jarvis-core'),
     '/usr/local/bin/jarvis-core',
   ];
 

@@ -27,9 +27,23 @@ export {
 } from './context-engine.js';
 export type { ContextBlock, EnrichedContext } from './context-engine.js';
 
+// Learning engine
+export {
+  analyzeTraces,
+  analyzeTracesRust,
+  getUsageReport,
+  shouldSuggestAutomation,
+  getFailureAnalysis,
+} from './learning-engine.js';
+export type { LearningInsight } from './learning-engine.js';
+
 // ── Initialization ──
 
 import { rebuildIndex } from './memory-index.js';
+import { analyzeTracesRust } from './learning-engine.js';
+import { getTraces } from './trace-store.js';
+
+let learningInterval: ReturnType<typeof setInterval> | null = null;
 
 /**
  * Initialize all intelligence subsystems.
@@ -40,5 +54,34 @@ export function initIntelligence(): void {
     rebuildIndex();
   } catch (err) {
     console.error('[intelligence] Failed to rebuild memory index:', err);
+  }
+
+  // Run learning analysis every 30 minutes if we have enough traces
+  learningInterval = setInterval(async () => {
+    const traces = getTraces();
+    if (traces.length >= 20) {
+      try {
+        await analyzeTracesRust();
+      } catch {
+        // silent — learning is best-effort
+      }
+    }
+  }, 30 * 60 * 1000);
+
+  // Run initial analysis after 60s to let traces load
+  setTimeout(async () => {
+    const traces = getTraces();
+    if (traces.length >= 20) {
+      try {
+        await analyzeTracesRust();
+      } catch { /* silent */ }
+    }
+  }, 60_000);
+}
+
+export function stopIntelligence(): void {
+  if (learningInterval) {
+    clearInterval(learningInterval);
+    learningInterval = null;
   }
 }

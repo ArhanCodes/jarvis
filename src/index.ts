@@ -65,7 +65,7 @@ import { SelfImproveModule } from './modules/self-improve.js';
 import MultiAgentModule from './modules/multi-agent.js';
 import ApiOrchestratorModule from './modules/api-orchestrator.js';
 import { MorningDigestModule } from './modules/morning-digest.js';
-import { initIntelligence, recordTrace } from './intelligence/index.js';
+import { initIntelligence, recordTrace, shouldSuggestAutomation } from './intelligence/index.js';
 import DataConnectorsModule from './modules/data-connectors.js';
 
 import { EnergyMonitorModule } from './modules/energy-monitor.js';
@@ -777,6 +777,13 @@ export function boot(): void {
 
     if (result.success) {
       if (!result.streamed) console.log(fmt.success(result.message));
+
+      // Check if this command is part of a repeated sequence worth automating
+      const automation = shouldSuggestAutomation(input);
+      if (automation?.suggest) {
+        console.log(fmt.dim(`  [intelligence] You often run: ${automation.routine.join(' → ')}`));
+        console.log(fmt.dim(`  [intelligence] Create a workflow? → create workflow routine: ${automation.routine.join(' && ')}`));
+      }
     } else {
       console.log(fmt.error(result.message));
     }

@@ -2,15 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { execSync } from 'child_process';
 import { loadPlugin, type PluginManifest } from './registry.js';
+import { configPath, getProjectRoot } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('plugin-loader');
 
 // ---------------------------------------------------------------------------
 // Config path
 // ---------------------------------------------------------------------------
 
-const PLUGINS_CONFIG = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname),
-  '../../config/plugins.json',
-);
+const PLUGINS_CONFIG = configPath('plugins.json');
 
 interface PluginsConfig {
   plugins: string[]; // manifest paths (absolute or relative to project root)
@@ -41,7 +42,7 @@ function writeConfig(config: PluginsConfig): void {
  */
 export async function loadPluginsFromConfig(): Promise<void> {
   const config = readConfig();
-  const projectRoot = path.resolve(path.dirname(PLUGINS_CONFIG), '..');
+  const projectRoot = getProjectRoot();
 
   for (const manifestPath of config.plugins) {
     const resolved = path.isAbsolute(manifestPath)
@@ -51,7 +52,7 @@ export async function loadPluginsFromConfig(): Promise<void> {
     try {
       await loadPlugin(resolved);
     } catch (err) {
-      console.error(`[plugin-loader] Failed to load plugin from ${resolved}:`, err);
+      log.error(`Failed to load plugin from ${resolved}`, err);
     }
   }
 }
@@ -67,7 +68,7 @@ export async function loadPluginsFromConfig(): Promise<void> {
  * `config/plugins.json`, then the plugin is loaded immediately.
  */
 export async function installPlugin(source: string): Promise<void> {
-  const projectRoot = path.resolve(path.dirname(PLUGINS_CONFIG), '..');
+  const projectRoot = getProjectRoot();
 
   // Determine if source is a local directory that already exists
   const localResolved = path.resolve(projectRoot, source);
@@ -113,7 +114,7 @@ export async function installPlugin(source: string): Promise<void> {
  * and runs `npm uninstall` if applicable.
  */
 export async function uninstallPlugin(name: string): Promise<void> {
-  const projectRoot = path.resolve(path.dirname(PLUGINS_CONFIG), '..');
+  const projectRoot = getProjectRoot();
   const config = readConfig();
 
   // Find matching entry by plugin name in manifest
@@ -130,8 +131,8 @@ export async function uninstallPlugin(name: string): Promise<void> {
       const raw = fs.readFileSync(resolved, 'utf-8');
       const manifest: PluginManifest = JSON.parse(raw);
       pluginName = manifest.name;
-    } catch {
-      // If manifest is unreadable, keep the entry unless name matches path
+    } catch (err) {
+      log.debug('Could not read plugin manifest', err);
     }
 
     if (pluginName === name) {
@@ -140,8 +141,8 @@ export async function uninstallPlugin(name: string): Promise<void> {
       if (resolved.includes('node_modules')) {
         try {
           execSync(`npm uninstall ${name}`, { cwd: projectRoot, stdio: 'pipe' });
-        } catch {
-          console.warn(`[plugin-loader] npm uninstall ${name} failed — manual cleanup may be needed`);
+        } catch (err) {
+          log.warn(`npm uninstall ${name} failed — manual cleanup may be needed`, err);
         }
       }
     } else {

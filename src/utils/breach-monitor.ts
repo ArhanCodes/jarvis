@@ -11,14 +11,13 @@
 
 import { fmt } from './formatter.js';
 import { speak } from './voice-output.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { createLogger } from './logger.js';
+import { readJsonConfig, writeJsonConfig } from './config.js';
 
 const execAsync = promisify(exec);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('breach-monitor');
 
 // ── Config ──
 
@@ -41,44 +40,24 @@ interface BreachState {
   knownBreaches: string[]; // already-alerted breach IDs
 }
 
-function getConfigPath(filename: string): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', filename),
-    join(__dirname, '..', 'config', filename),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) return p;
-  }
-  const dir = dirname(paths[0]);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return paths[0];
-}
-
 function loadConfig(): BreachConfig {
-  const path = getConfigPath('breach-monitor.json');
-  try {
-    if (existsSync(path)) {
-      return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(path, 'utf-8')) };
-    }
-  } catch { /* use defaults */ }
-  // Write default config on first run
-  writeFileSync(path, JSON.stringify(DEFAULT_CONFIG, null, 2));
-  return DEFAULT_CONFIG;
+  const loaded = readJsonConfig<Partial<BreachConfig>>('breach-monitor.json', {});
+  if (Object.keys(loaded).length === 0) {
+    // Write default config on first run
+    writeJsonConfig('breach-monitor.json', DEFAULT_CONFIG);
+    return DEFAULT_CONFIG;
+  }
+  return { ...DEFAULT_CONFIG, ...loaded };
 }
 
 function loadState(): BreachState {
-  const path = getConfigPath('breach-state.json');
-  try {
-    if (existsSync(path)) return JSON.parse(readFileSync(path, 'utf-8'));
-  } catch { /* fresh state */ }
-  return { lastCheck: null, alerts: [], sslExpiry: {}, knownBreaches: [] };
+  return readJsonConfig<BreachState>('breach-state.json', { lastCheck: null, alerts: [], sslExpiry: {}, knownBreaches: [] });
 }
 
 function saveState(state: BreachState): void {
-  const path = getConfigPath('breach-state.json');
   // Keep last 100 alerts
   if (state.alerts.length > 100) state.alerts = state.alerts.slice(-100);
-  writeFileSync(path, JSON.stringify(state, null, 2));
+  writeJsonConfig('breach-state.json', state);
 }
 
 // ── SSL Certificate Check ──
@@ -111,7 +90,8 @@ async function checkDomainHealth(domain: string): Promise<{ reachable: boolean; 
       signal: AbortSignal.timeout(10000),
     });
     return { reachable: true, statusCode: resp.status, responseTime: Date.now() - start };
-  } catch {
+  } catch (err) {
+    log.debug(`HTTPS check failed for ${domain}`, err);
     // Try http as fallback
     try {
       const resp = await fetch(`http://${domain}`, {
@@ -119,7 +99,8 @@ async function checkDomainHealth(domain: string): Promise<{ reachable: boolean; 
         signal: AbortSignal.timeout(10000),
       });
       return { reachable: true, statusCode: resp.status, responseTime: Date.now() - start };
-    } catch {
+    } catch (err2) {
+      log.debug(`HTTP fallback check failed for ${domain}`, err2);
       return { reachable: false, statusCode: 0, responseTime: Date.now() - start };
     }
   }
@@ -141,7 +122,8 @@ async function checkHIBP(email: string): Promise<{ breached: boolean; breaches: 
       return { breached: true, breaches: data.map(b => b.Name) };
     }
     return { breached: false, breaches: [] };
-  } catch {
+  } catch (err) {
+    log.debug(`HIBP check failed for ${email}`, err);
     return { breached: false, breaches: [] };
   }
 }

@@ -6,6 +6,9 @@ import { conversationEngine } from '../core/conversation-engine.js';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { unlinkSync, existsSync } from 'fs';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('screen-awareness');
 
 // ── Screen Awareness Module ──
 // OCR-based screen reading using macOS Vision framework.
@@ -55,7 +58,7 @@ print(text)
 
     throw new Error('OCR failed. macOS Vision could not read the screen.');
   } finally {
-    try { if (existsSync(tmpFile)) unlinkSync(tmpFile); } catch { /* ok */ }
+    try { if (existsSync(tmpFile)) unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up OCR temp file', err); }
   }
 }
 

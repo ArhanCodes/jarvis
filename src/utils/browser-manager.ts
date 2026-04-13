@@ -1,26 +1,21 @@
 import { chromium, type BrowserContext, type Page } from 'playwright';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { mkdirSync, existsSync } from 'fs';
+import { createLogger } from './logger.js';
+import { configPath } from './config.js';
+import { join } from 'path';
 
 // ── Shared Browser Lifecycle Manager ──
 // Manages persistent Playwright browser contexts for WhatsApp, general browsing, etc.
 // Each profile gets its own user data directory so sessions persist across runs.
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('browser-manager');
 
 function getDataDir(profile: string): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', '.browser-data', profile),
-    join(__dirname, '..', '..', '..', 'config', '.browser-data', profile),
-  ];
-  const configBase = existsSync(join(__dirname, '..', '..', 'config'))
-    ? join(__dirname, '..', '..', 'config', '.browser-data', profile)
-    : paths[0];
-  if (!existsSync(configBase)) {
-    mkdirSync(configBase, { recursive: true });
+  const dir = join(configPath('.browser-data'), profile);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
   }
-  return configBase;
+  return dir;
 }
 
 interface BrowserSession {
@@ -40,7 +35,8 @@ export async function getBrowser(
     try {
       await existing.page.title();
       return existing;
-    } catch {
+    } catch (err) {
+      log.debug(`Browser session '${profile}' is dead, recreating`, err);
       sessions.delete(profile);
     }
   }
@@ -78,7 +74,7 @@ export async function getPage(profile: string): Promise<Page | null> {
 export async function closeBrowser(profile: string): Promise<void> {
   const session = sessions.get(profile);
   if (session) {
-    try { await session.context.close(); } catch { /* ok */ }
+    try { await session.context.close(); } catch (err) { log.debug(`Failed to close browser '${profile}'`, err); }
     sessions.delete(profile);
   }
 }

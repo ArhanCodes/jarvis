@@ -7,6 +7,10 @@
 import { execSync } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
+import { createLogger } from '../utils/logger.js';
+import { configPath } from '../utils/config.js';
+
+const log = createLogger('energy-tracker');
 
 // ── Interfaces ──────────────────────────────────────────────────────────────
 
@@ -46,7 +50,7 @@ export interface EnergyReport {
 
 // ── Constants ───────────────────────────────────────────────────────────────
 
-const METRICS_PATH = path.join(process.cwd(), 'config', 'energy-metrics.json');
+const METRICS_PATH = configPath('energy-metrics.json');
 const MAX_ENTRIES = 10000;
 
 // LLM pricing per 1M tokens (input / output) in USD
@@ -105,7 +109,8 @@ function ensureLoaded(): void {
         metrics = parsed;
       }
     }
-  } catch {
+  } catch (err) {
+    log.debug('Failed to load energy metrics', err);
     metrics = [];
   }
 }
@@ -172,8 +177,8 @@ export function estimateEnergy(): number | null {
       const wattsEstimate = (pct / 100 * batteryWh) / hoursLeft;
       return Math.round(wattsEstimate * 100) / 100;
     }
-  } catch {
-    // pmset not available or failed
+  } catch (err) {
+    log.debug('pmset energy estimation failed', err);
   }
 
   try {
@@ -193,8 +198,8 @@ export function estimateEnergy(): number | null {
       const idleWatts = 3;
       return Math.round((idleWatts + (tdp - idleWatts) * (totalCpu / 100)) * 100) / 100;
     }
-  } catch {
-    // top not available
+  } catch (err) {
+    log.debug('CPU-based energy estimation failed', err);
   }
 
   return null;
@@ -362,7 +367,7 @@ export function flushEnergyData(): void {
     }
     fs.writeFileSync(METRICS_PATH, JSON.stringify(metrics, null, 2));
   } catch (err) {
-    console.error('[energy-tracker] Failed to flush data:', err);
+    log.error('Failed to flush data', err);
   }
 }
 

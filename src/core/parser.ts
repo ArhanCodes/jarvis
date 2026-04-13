@@ -1,40 +1,20 @@
 import type { ParsedCommand, ModuleName } from './types.js';
 import { registry } from './registry.js';
 import { expandVariables } from './context.js';
-import { readFileSync, existsSync, statSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readCachedConfig, invalidateCache } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 import { fuzzyMatch as rustFuzzyMatch, isSidecarAvailable, type KeywordEntry } from '../utils/rust-bridge.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('parser');
 
 // ── Alias loading (cached) ──
-let aliasCache: Record<string, string> | null = null;
-let aliasMtime = 0;
 
 function loadAliases(): Record<string, string> {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'aliases.json'),
-    join(__dirname, '..', '..', '..', 'config', 'aliases.json'),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) {
-      try {
-        const stat = statSync(p);
-        if (stat.mtimeMs !== aliasMtime) {
-          aliasMtime = stat.mtimeMs;
-          aliasCache = JSON.parse(readFileSync(p, 'utf-8'));
-        }
-        return aliasCache ?? {};
-      } catch { /* ignore */ }
-    }
-  }
-  return {};
+  return readCachedConfig<Record<string, string>>('aliases.json', {});
 }
 
 export function invalidateAliasCache(): void {
-  aliasCache = null;
-  aliasMtime = 0;
+  invalidateCache('aliases.json');
 }
 
 function looksLikePath(text: string): boolean {

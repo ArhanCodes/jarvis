@@ -1,16 +1,17 @@
 import { exec, execSync, ChildProcess } from 'child_process';
-import { readFileSync, unlinkSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, unlinkSync } from 'fs';
+import { join } from 'path';
 import { tmpdir } from 'os';
 import { IS_MAC } from './platform.js';
+import { createLogger } from './logger.js';
+import { readJsonConfig } from './config.js';
+
+const log = createLogger('voice');
 
 // ── JARVIS Voice Output ──
 // Edge TTS (Microsoft neural voices) with macOS Daniel fallback.
 // On Linux VPS: speak() is a no-op (no speakers). generateTTSAudio() still works
 // for streaming audio to connected devices.
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const FALLBACK_VOICE = 'Daniel';
 const FALLBACK_RATE = 190;
@@ -38,18 +39,8 @@ let speechAborted = false;
 
 // Load config on startup
 function loadConfig(): void {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'voice.json'),
-    join(__dirname, '..', '..', '..', 'config', 'voice.json'),
-  ];
-  for (const p of paths) {
-    try {
-      if (existsSync(p)) {
-        config = JSON.parse(readFileSync(p, 'utf-8'));
-        return;
-      }
-    } catch { /* ignore */ }
-  }
+  const loaded = readJsonConfig<VoiceConfig>('voice.json', { provider: 'macos' });
+  config = loaded;
 }
 loadConfig();
 
@@ -101,8 +92,8 @@ export function stopSpeaking(): void {
   }
   // Kill any lingering TTS audio or say processes spawned by JARVIS (macOS only)
   if (IS_MAC) {
-    try { execSync('pkill -f "afplay.*jarvis-tts" 2>/dev/null', { stdio: 'ignore' }); } catch { /* ok */ }
-    try { execSync('pkill -f "say -v" 2>/dev/null', { stdio: 'ignore' }); } catch { /* ok */ }
+    try { execSync('pkill -f "afplay.*jarvis-tts" 2>/dev/null', { stdio: 'ignore' }); } catch (err) { log.debug('Failed to kill afplay processes', err); }
+    try { execSync('pkill -f "say -v" 2>/dev/null', { stdio: 'ignore' }); } catch (err) { log.debug('Failed to kill say processes', err); }
   }
 }
 
@@ -165,7 +156,7 @@ async function speakEdgeTts(text: string): Promise<boolean> {
     });
 
     if (speechAborted) {
-      try { unlinkSync(tmpFile); } catch { /* ok */ }
+      try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up TTS temp file', err); }
       return true;
     }
 
@@ -173,12 +164,13 @@ async function speakEdgeTts(text: string): Promise<boolean> {
     return new Promise((resolve) => {
       currentProcess = exec(`afplay "${tmpFile}"`, { timeout: 60000 }, () => {
         currentProcess = null;
-        try { unlinkSync(tmpFile); } catch { /* ok */ }
+        try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up TTS temp file', err); }
         resolve(true);
       });
     });
-  } catch {
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+  } catch (err) {
+    log.debug('Edge TTS synthesis failed', err);
+    try { unlinkSync(tmpFile); } catch (err2) { log.debug('Failed to clean up TTS temp file', err2); }
     return false;
   }
 }
@@ -219,19 +211,20 @@ async function speakElevenLabs(text: string): Promise<boolean> {
     writeFileSync(tmpFile, Buffer.from(arrayBuf));
 
     if (speechAborted) {
-      try { unlinkSync(tmpFile); } catch { /* ok */ }
+      try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up ElevenLabs temp file', err); }
       return true;
     }
 
     return new Promise((resolve) => {
       currentProcess = exec(`afplay "${tmpFile}"`, { timeout: 60000 }, () => {
         currentProcess = null;
-        try { unlinkSync(tmpFile); } catch { /* ok */ }
+        try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up ElevenLabs temp file', err); }
         resolve(true);
       });
     });
-  } catch {
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+  } catch (err) {
+    log.debug('ElevenLabs synthesis failed', err);
+    try { unlinkSync(tmpFile); } catch (err2) { log.debug('Failed to clean up ElevenLabs temp file', err2); }
     return false;
   }
 }
@@ -342,7 +335,8 @@ async function generateElevenLabsAudio(text: string): Promise<Buffer | null> {
     if (!response.ok) return null;
     const arrayBuf = await response.arrayBuffer();
     return Buffer.from(arrayBuf);
-  } catch {
+  } catch (err) {
+    log.debug('ElevenLabs audio generation failed', err);
     return null;
   }
 }
@@ -364,10 +358,11 @@ async function generateEdgeTtsAudio(text: string): Promise<Buffer | null> {
     });
 
     const data = readFileSync(tmpFile);
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+    try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up Edge TTS temp file', err); }
     return data;
-  } catch {
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+  } catch (err) {
+    log.debug('Edge TTS audio generation failed', err);
+    try { unlinkSync(tmpFile); } catch (err2) { log.debug('Failed to clean up Edge TTS temp file', err2); }
     return null;
   }
 }
@@ -387,10 +382,11 @@ async function generateMacOSAudio(text: string): Promise<Buffer | null> {
     });
 
     const data = readFileSync(tmpFile);
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+    try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up macOS TTS temp file', err); }
     return data;
-  } catch {
-    try { unlinkSync(tmpFile); } catch { /* ok */ }
+  } catch (err) {
+    log.debug('macOS audio generation failed', err);
+    try { unlinkSync(tmpFile); } catch (err2) { log.debug('Failed to clean up macOS TTS temp file', err2); }
     return null;
   }
 }

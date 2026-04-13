@@ -1,5 +1,8 @@
 import { writeFileSync, unlinkSync, existsSync } from 'fs';
 import { IS_MAC } from './platform.js';
+import { createLogger } from './logger.js';
+
+const log = createLogger('status-reporter');
 
 // ── Status Reporter ──
 // Writes JARVIS state to /tmp/jarvis-status.json for the menubar app to read.
@@ -49,7 +52,7 @@ function flush(): void {
   if (IS_MAC) {
     try {
       writeFileSync(STATUS_PATH, JSON.stringify(currentStatus));
-    } catch { /* ignore write errors */ }
+    } catch (err) { log.debug('Failed to write status file', err); }
   }
   // Push to watch server if connected
   statusCallback?.(currentStatus);
@@ -91,5 +94,5 @@ export function reportShutdown(): void {
   // Clean up the status file
   try {
     if (existsSync(STATUS_PATH)) unlinkSync(STATUS_PATH);
-  } catch { /* ignore */ }
+  } catch (err) { log.debug('Failed to clean up status file', err); }
 }

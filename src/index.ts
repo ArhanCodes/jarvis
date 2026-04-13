@@ -1,8 +1,6 @@
 import * as readline from 'readline';
 import { exec } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { registry } from './core/registry.js';
 import { parse, splitChainedCommands } from './core/parser.js';
 import { execute } from './core/executor.js';
@@ -67,28 +65,20 @@ import ApiOrchestratorModule from './modules/api-orchestrator.js';
 import { MorningDigestModule } from './modules/morning-digest.js';
 import { initIntelligence, recordTrace, shouldSuggestAutomation } from './intelligence/index.js';
 import DataConnectorsModule from './modules/data-connectors.js';
+import { configPath, readJsonConfig, projectPath } from './utils/config.js';
+import { createLogger } from './utils/logger.js';
+
+const log = createLogger('jarvis');
 
 import { EnergyMonitorModule } from './modules/energy-monitor.js';
 import { SandboxRunnerModule } from './modules/sandbox-runner.js';
 import { discoverGeneratedModules, bootModules } from './core/registry.js';
 import { loadPluginsFromConfig } from './core/plugin-loader.js';
 import { startSidecar, stopSidecar } from './utils/rust-bridge.js';
+import { popUndo, peekUndo, listUndoStack } from './core/undo-stack.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function getConfigPath(filename: string): string {
-  const paths = [
-    join(__dirname, '..', 'config', filename),
-    join(__dirname, '..', '..', 'config', filename),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) return p;
-  }
-  return paths[0];
-}
-
-function getAliasPath(): string { return getConfigPath('aliases.json'); }
-function getStartupPath(): string { return getConfigPath('startup.json'); }
+function getAliasPath(): string { return configPath('aliases.json'); }
+function getStartupPath(): string { return configPath('startup.json'); }
 
 interface StartupConfig {
   commands: string[];
@@ -155,7 +145,7 @@ function handleAlias(input: string): boolean {
     const [, name, command] = aliasMatch;
     const aliasPath = getAliasPath();
     let aliases: Record<string, string> = {};
-    try { aliases = JSON.parse(readFileSync(aliasPath, 'utf-8')); } catch { /* empty */ }
+    try { aliases = JSON.parse(readFileSync(aliasPath, 'utf-8')); } catch (err) { log.debug('No existing aliases file', err); }
     aliases[name.toLowerCase()] = command.trim();
     writeFileSync(aliasPath, JSON.stringify(aliases, null, 2) + '\n');
     console.log(fmt.success(`Alias created: "${name}" → "${command.trim()}"`));
@@ -175,7 +165,8 @@ function handleAlias(input: string): boolean {
           console.log(fmt.label(key, val));
         }
       }
-    } catch {
+    } catch (err) {
+      log.debug('Could not read aliases', err);
       console.log(fmt.info('No aliases defined.'));
     }
     return true;
@@ -186,7 +177,7 @@ function handleAlias(input: string): boolean {
   if (delMatch) {
     const aliasPath = getAliasPath();
     let aliases: Record<string, string> = {};
-    try { aliases = JSON.parse(readFileSync(aliasPath, 'utf-8')); } catch { /* empty */ }
+    try { aliases = JSON.parse(readFileSync(aliasPath, 'utf-8')); } catch (err) { log.debug('No existing aliases file', err); }
     const key = delMatch[1].toLowerCase();
     if (key in aliases) {
       delete aliases[key];
@@ -207,7 +198,7 @@ function handleStartup(input: string): boolean {
     const cmd = addMatch[1].trim();
     const startupPath = getStartupPath();
     let config: StartupConfig = { commands: [], greeting: true };
-    try { config = JSON.parse(readFileSync(startupPath, 'utf-8')); } catch { /* empty */ }
+    try { config = JSON.parse(readFileSync(startupPath, 'utf-8')); } catch (err) { log.debug('No existing startup config', err); }
     config.commands.push(cmd);
     writeFileSync(startupPath, JSON.stringify(config, null, 2) + '\n');
     console.log(fmt.success(`Startup command added: "${cmd}"`));
@@ -224,7 +215,8 @@ function handleStartup(input: string): boolean {
         console.log(fmt.heading('Startup Commands'));
         config.commands.forEach((cmd, i) => { console.log(`    ${i + 1}. ${cmd}`); });
       }
-    } catch {
+    } catch (err) {
+      log.debug('Could not read startup config', err);
       console.log(fmt.info('No startup commands configured.'));
     }
     return true;
@@ -242,7 +234,7 @@ function handleStartup(input: string): boolean {
     const idx = parseInt(removeMatch[1], 10) - 1;
     const startupPath = getStartupPath();
     let config: StartupConfig = { commands: [], greeting: true };
-    try { config = JSON.parse(readFileSync(startupPath, 'utf-8')); } catch { /* empty */ }
+    try { config = JSON.parse(readFileSync(startupPath, 'utf-8')); } catch (err) { log.debug('No existing startup config', err); }
     if (idx >= 0 && idx < config.commands.length) {
       const removed = config.commands.splice(idx, 1)[0];
       writeFileSync(startupPath, JSON.stringify(config, null, 2) + '\n');
@@ -345,7 +337,7 @@ async function runStartupCommands(): Promise<void> {
       }
       console.log('');
     }
-  } catch { /* no startup config */ }
+  } catch (err) { log.debug('No startup config or failed to run', err); }
 }
 
 export function boot(): void {
@@ -442,9 +434,9 @@ export function boot(): void {
 
   // Auto-launch menubar app (Mac only)
   if (IS_MAC) {
-    const menubarScript = join(__dirname, '..', 'menubar', 'start-menubar.sh');
+    const menubarScript = projectPath('menubar', 'start-menubar.sh');
     if (existsSync(menubarScript)) {
-      exec(`bash "${menubarScript}"`, { cwd: dirname(menubarScript) });
+      exec(`bash "${menubarScript}"`, { cwd: projectPath('menubar') });
     }
   }
 
@@ -540,6 +532,25 @@ export function boot(): void {
         await processLine(last);
       } else {
         console.log(fmt.warn('No previous command.'));
+      }
+      return;
+    }
+
+    // Undo
+    if (/^undo$/i.test(input)) {
+      const result = await popUndo();
+      console.log(result.success ? fmt.success(result.message) : fmt.warn(result.message));
+      return;
+    }
+    if (/^undo\s+(list|stack|history)$/i.test(input)) {
+      const items = listUndoStack();
+      if (items.length === 0) {
+        console.log(fmt.info('Undo stack is empty.'));
+      } else {
+        console.log(fmt.heading('Undo Stack'));
+        for (const item of items) {
+          console.log(fmt.label(item.description, `${item.module} — ${item.age}`));
+        }
       }
       return;
     }
@@ -734,8 +745,8 @@ export function boot(): void {
         process.stdout.write('\n\n');
         recordCommand(input, { success: true, message: response.text, streamed: true });
         return;
-      } catch {
-        // AI unavailable — fall back to suggestions
+      } catch (err) {
+        log.warn('AI conversation engine failed', err);
         const suggestions = getSuggestions(input);
         if (suggestions.length > 0) {
           console.log(fmt.warn(`I didn't understand "${input}". Did you mean:`));

@@ -8,6 +8,9 @@
 import { getAllFacts, getAllConversations, loadMemory } from '../core/memory.js';
 import { getTraces, type Trace } from './trace-store.js';
 import { isSidecarAvailable, vectorSearch, bulkIndex as sidecarBulkIndex } from '../utils/rust-bridge.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('memory-index');
 
 // ── Types ──
 
@@ -291,8 +294,8 @@ export function rebuildIndex(): void {
 
   try {
     loadMemory();
-  } catch {
-    // memory may not be initialized yet
+  } catch (err) {
+    log.debug('Memory not initialized yet', err);
   }
 
   // Index memory facts
@@ -312,8 +315,8 @@ export function rebuildIndex(): void {
         importance: 0.7, // facts are generally important
       });
     }
-  } catch {
-    // facts unavailable
+  } catch (err) {
+    log.debug('Failed to index memory facts', err);
   }
 
   // Index conversation entries
@@ -338,8 +341,8 @@ export function rebuildIndex(): void {
         importance: 0.3, // conversations are lower priority unless accessed
       });
     }
-  } catch {
-    // conversations unavailable
+  } catch (err) {
+    log.debug('Failed to index conversations', err);
   }
 
   // Index traces
@@ -359,8 +362,8 @@ export function rebuildIndex(): void {
         importance: trace.result.success ? 0.4 : 0.6, // failures are more noteworthy
       });
     }
-  } catch {
-    // traces unavailable
+  } catch (err) {
+    log.debug('Failed to index traces', err);
   }
 
   // Sync to Rust sidecar if available
@@ -392,8 +395,8 @@ export async function hybridSearch(query: string, limit = 10): Promise<SearchRes
           matchedTerms: [],
         }));
       }
-    } catch {
-      // Fall through to TF-IDF
+    } catch (err) {
+      log.debug('Sidecar vector search failed, falling back to TF-IDF', err);
     }
   }
 
@@ -416,7 +419,7 @@ async function syncToSidecar(): Promise<void> {
 
   if (docs.length > 0) {
     await sidecarBulkIndex(docs);
-    console.log(`[memory-index] Synced ${docs.length} docs to Rust sidecar`);
+    log.info(`Synced ${docs.length} docs to Rust sidecar`);
   }
 }
 

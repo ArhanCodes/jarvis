@@ -1,46 +1,12 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('memory');
 
 // ── Persistent Memory System ──
 // Stores user facts, preferences, and conversation history across sessions.
 // Two files: config/memory.json (facts) and config/conversations.json (history).
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-
-function resolveConfigPath(filename: string): string {
-  // Walk up from __dirname to find the project root config/ directory.
-  // The project root config/ contains memory.json, conversations.json, etc.
-  // We must skip dist/config/ which is a build artifact.
-  let dir = __dirname;
-  for (let i = 0; i < 6; i++) {
-    const candidate = join(dir, 'config', filename);
-    const configDir = join(dir, 'config');
-    // Skip if we're inside the dist directory
-    if (existsSync(join(dir, 'package.json')) && existsSync(configDir) && !dir.includes('/dist')) {
-      return candidate;
-    }
-    // Also check if config exists at this level and package.json is one level up
-    if (existsSync(configDir) && !dir.includes('/dist') && existsSync(join(dir, '..', 'package.json'))) {
-      return candidate;
-    }
-    dir = join(dir, '..');
-  }
-  // Fallback: go up until we find package.json (project root)
-  dir = __dirname;
-  for (let i = 0; i < 6; i++) {
-    dir = join(dir, '..');
-    if (existsSync(join(dir, 'package.json'))) {
-      const configDir = join(dir, 'config');
-      if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
-      return join(configDir, filename);
-    }
-  }
-  // Last resort
-  const configDir = join(__dirname, '..', '..', 'config');
-  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
-  return join(configDir, filename);
-}
 
 // ── Types ──
 
@@ -88,11 +54,11 @@ let loaded = false;
 // ── Load / Save ──
 
 function getMemoryPath(): string {
-  return resolveConfigPath('memory.json');
+  return configPath('memory.json');
 }
 
 function getConversationsPath(): string {
-  return resolveConfigPath('conversations.json');
+  return configPath('conversations.json');
 }
 
 export function loadMemory(): void {
@@ -104,7 +70,8 @@ export function loadMemory(): void {
   if (existsSync(memPath)) {
     try {
       memoryData = JSON.parse(readFileSync(memPath, 'utf-8'));
-    } catch {
+    } catch (err) {
+      log.warn('Failed to load memory.json', err);
       memoryData = { version: 1, facts: [] };
     }
   } else {
@@ -130,7 +97,8 @@ export function loadMemory(): void {
   if (existsSync(convPath)) {
     try {
       conversationData = JSON.parse(readFileSync(convPath, 'utf-8'));
-    } catch {
+    } catch (err) {
+      log.warn('Failed to load conversations.json', err);
       conversationData = { conversations: [], summaries: [] };
     }
   }
@@ -139,13 +107,13 @@ export function loadMemory(): void {
 function saveMemoryNow(): void {
   try {
     writeFileSync(getMemoryPath(), JSON.stringify(memoryData, null, 2), 'utf-8');
-  } catch { /* ignore */ }
+  } catch (err) { log.warn('Failed to save memory.json', err); }
 }
 
 function saveConversationsNow(): void {
   try {
     writeFileSync(getConversationsPath(), JSON.stringify(conversationData, null, 2), 'utf-8');
-  } catch { /* ignore */ }
+  } catch (err) { log.warn('Failed to save conversations.json', err); }
 }
 
 function maybeSaveMemory(): void {

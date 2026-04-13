@@ -3,6 +3,9 @@ import { getBrowser, closeBrowser, isOpen } from '../utils/browser-manager.js';
 import { fmt } from '../utils/formatter.js';
 import { join } from 'path';
 import { homedir } from 'os';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('browser-control');
 
 // ── Browser Control Module ──
 // Browse websites, Google search, read pages, click, fill forms, screenshot.
@@ -203,8 +206,8 @@ export class BrowserControlModule implements JarvisModule {
         await page.getByText(target, { exact: false }).first().click({ timeout: 5000 });
         const title = await page.title();
         return { success: true, message: `Clicked "${target}" — now on: ${title}` };
-      } catch {
-        // Fall back to CSS selector
+      } catch (err) {
+        log.debug('Text click failed, trying CSS selector', err);
       }
 
       // Try as CSS selector
@@ -212,8 +215,8 @@ export class BrowserControlModule implements JarvisModule {
         await page.click(target, { timeout: 5000 });
         const title = await page.title();
         return { success: true, message: `Clicked element "${target}" — now on: ${title}` };
-      } catch {
-        // Try by role
+      } catch (err) {
+        log.debug('CSS selector click failed, trying role', err);
       }
 
       // Try as button/link text
@@ -222,7 +225,8 @@ export class BrowserControlModule implements JarvisModule {
         await el.first().click({ timeout: 5000 });
         const title = await page.title();
         return { success: true, message: `Clicked "${target}" — now on: ${title}` };
-      } catch {
+      } catch (err) {
+        log.debug('Role-based click failed', err);
         return { success: false, message: `Could not find "${target}" on the page.` };
       }
     } catch (err) {
@@ -242,13 +246,13 @@ export class BrowserControlModule implements JarvisModule {
       try {
         await page.getByPlaceholder(selector, { exact: false }).first().fill(value);
         return { success: true, message: `Filled "${selector}" with "${value}"` };
-      } catch { /* try CSS */ }
+      } catch (err) { log.debug('Placeholder fill failed, trying label', err); }
 
       // Try as label
       try {
         await page.getByLabel(selector, { exact: false }).first().fill(value);
         return { success: true, message: `Filled "${selector}" with "${value}"` };
-      } catch { /* try CSS */ }
+      } catch (err) { log.debug('Label fill failed, trying CSS', err); }
 
       // Try as CSS selector
       await page.fill(selector, value, { timeout: 5000 });

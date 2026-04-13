@@ -3,6 +3,9 @@ import { osascript, getFrontmostApp, activateApp } from '../utils/osascript.js';
 import { llmStreamChat, isLLMAvailable } from '../utils/llm.js';
 import { fmt } from '../utils/formatter.js';
 import { execSync } from 'child_process';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('screen-interact');
 
 // ── Screen Interact Module ──
 // Grab selected text (Cmd+C), process with AI, paste back (Cmd+V).
@@ -108,7 +111,8 @@ export class ScreenInteractModule implements JarvisModule {
     let frontApp: string;
     try {
       frontApp = (await getFrontmostApp()).trim();
-    } catch {
+    } catch (err) {
+      log.debug('Could not get frontmost app', err);
       frontApp = '';
     }
 
@@ -116,7 +120,7 @@ export class ScreenInteractModule implements JarvisModule {
     let originalClipboard = '';
     try {
       originalClipboard = execSync('pbpaste', { encoding: 'utf-8', timeout: 3000 });
-    } catch { /* empty clipboard is fine */ }
+    } catch (err) { log.debug('Could not read original clipboard', err); }
 
     // 3. Copy selected text (Cmd+C)
     try {
@@ -132,7 +136,8 @@ export class ScreenInteractModule implements JarvisModule {
     let selectedText: string;
     try {
       selectedText = execSync('pbpaste', { encoding: 'utf-8', timeout: 3000 }).trim();
-    } catch {
+    } catch (err) {
+      log.debug('Could not read clipboard after copy', err);
       return { success: false, message: 'Could not read clipboard.', voiceMessage: 'Could not read the clipboard.' };
     }
 
@@ -166,7 +171,8 @@ export class ScreenInteractModule implements JarvisModule {
     // 6. Write result to clipboard
     try {
       execSync('pbcopy', { input: result, timeout: 3000 });
-    } catch {
+    } catch (err) {
+      log.debug('Could not write to clipboard', err);
       this.restoreClipboard(originalClipboard);
       return { success: false, message: 'Could not write to clipboard.', voiceMessage: 'Could not write to the clipboard.' };
     }
@@ -200,7 +206,7 @@ export class ScreenInteractModule implements JarvisModule {
   private restoreClipboard(content: string): void {
     try {
       execSync('pbcopy', { input: content, timeout: 3000 });
-    } catch { /* best effort */ }
+    } catch (err) { log.debug('Could not restore clipboard', err); }
   }
 
   getHelp(): string {

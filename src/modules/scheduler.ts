@@ -1,12 +1,13 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { parse } from '../core/parser.js';
 import { execute } from '../core/executor.js';
 import { fmt } from '../utils/formatter.js';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('scheduler');
 
 // ── Persistence ──
 
@@ -34,15 +35,7 @@ const liveTasks: Map<number, LiveTask> = new Map();
 let nextId = 1;
 
 function getDataPath(): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'scheduled-tasks.json'),
-    join(__dirname, '..', '..', '..', 'config', 'scheduled-tasks.json'),
-  ];
-  for (const p of paths) {
-    const dir = dirname(p);
-    if (existsSync(dir)) return p;
-  }
-  return paths[0];
+  return configPath('scheduled-tasks.json');
 }
 
 function loadData(): SchedulerData {
@@ -52,7 +45,7 @@ function loadData(): SchedulerData {
       const data = JSON.parse(readFileSync(path, 'utf-8')) as SchedulerData;
       return data;
     }
-  } catch { /* ignore corrupt data */ }
+  } catch (err) { log.warn('Failed to load scheduled tasks', err); }
   return { version: 1, nextId: 1, tasks: [] };
 }
 

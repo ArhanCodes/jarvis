@@ -10,14 +10,13 @@
 
 import { fmt } from './formatter.js';
 import { speak } from './voice-output.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { createLogger } from './logger.js';
+import { readJsonConfig, writeJsonConfig } from './config.js';
 
 const execAsync = promisify(exec);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('network-guardian');
 
 // ── Types ──
 
@@ -55,43 +54,23 @@ const DEFAULT_CONFIG: GuardianConfig = {
   homeSSIDs: ['TP-Link'],
 };
 
-function getConfigPath(filename: string): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', filename),
-    join(__dirname, '..', 'config', filename),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) return p;
-  }
-  const dir = dirname(paths[0]);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return paths[0];
-}
-
 function loadConfig(): GuardianConfig {
-  const path = getConfigPath('network-guardian.json');
-  try {
-    if (existsSync(path)) {
-      return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(path, 'utf-8')) };
-    }
-  } catch { /* use defaults */ }
-  writeFileSync(path, JSON.stringify(DEFAULT_CONFIG, null, 2));
-  return DEFAULT_CONFIG;
+  const loaded = readJsonConfig<Partial<GuardianConfig>>('network-guardian.json', {});
+  if (Object.keys(loaded).length === 0) {
+    writeJsonConfig('network-guardian.json', DEFAULT_CONFIG);
+    return DEFAULT_CONFIG;
+  }
+  return { ...DEFAULT_CONFIG, ...loaded };
 }
 
 function loadState(): GuardianState {
-  const path = getConfigPath('network-devices.json');
-  try {
-    if (existsSync(path)) return JSON.parse(readFileSync(path, 'utf-8'));
-  } catch { /* fresh state */ }
-  return { devices: [], scanCount: 0, lastScan: null, alerts: [] };
+  return readJsonConfig<GuardianState>('network-devices.json', { devices: [], scanCount: 0, lastScan: null, alerts: [] });
 }
 
 function saveState(state: GuardianState): void {
-  const path = getConfigPath('network-devices.json');
   // Keep last 200 alerts
   if (state.alerts.length > 200) state.alerts = state.alerts.slice(-200);
-  writeFileSync(path, JSON.stringify(state, null, 2));
+  writeJsonConfig('network-devices.json', state);
 }
 
 // ── OUI Vendor Lookup (common prefixes) ──
@@ -186,7 +165,8 @@ async function getCurrentSSID(): Promise<string | null> {
       { timeout: 5000 },
     );
     return stdout.trim() || null;
-  } catch {
+  } catch (err) {
+    log.debug('Failed to get current SSID', err);
     return null;
   }
 }

@@ -2,11 +2,11 @@ import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } fr
 import { llmStreamChat } from '../utils/llm.js';
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = join(__dirname, '..', '..', 'config', 'morning-digest.json');
+const log = createLogger('morning-digest');
+const CONFIG_PATH = configPath('morning-digest.json');
 
 // ── Morning Digest Module ──
 // Comprehensive daily briefing that gathers weather, calendar, email,
@@ -40,7 +40,7 @@ function loadConfig(): DigestConfig {
       const data = JSON.parse(readFileSync(CONFIG_PATH, 'utf-8'));
       return { ...defaults, ...data };
     }
-  } catch { /* use defaults */ }
+  } catch (err) { log.debug('Failed to load digest config, using defaults', err); }
   return defaults;
 }
 
@@ -202,7 +202,7 @@ async function getSystemStatus(): Promise<string> {
       if (battMatch) {
         parts.push(`Battery: ${battMatch[1]}%${chargingMatch ? ` (${chargingMatch[1]})` : ''}`);
       }
-    } catch { /* skip */ }
+    } catch (err) { log.debug('Battery check failed', err); }
 
     // Disk space
     try {
@@ -211,7 +211,7 @@ async function getSystemStatus(): Promise<string> {
       if (dfParts.length >= 5) {
         parts.push(`Disk: ${dfParts[3]} available (${dfParts[4]} used)`);
       }
-    } catch { /* skip */ }
+    } catch (err) { log.debug('Disk check failed', err); }
 
     // Uptime
     try {
@@ -220,10 +220,11 @@ async function getSystemStatus(): Promise<string> {
       if (upMatch) {
         parts.push(`Uptime: ${upMatch[1].trim()}`);
       }
-    } catch { /* skip */ }
+    } catch (err) { log.debug('Uptime check failed', err); }
 
     return parts.length > 0 ? parts.join('. ') + '.' : 'System status unavailable.';
-  } catch {
+  } catch (err) {
+    log.debug('System status check failed', err);
     return 'System status unavailable.';
   }
 }
@@ -231,7 +232,7 @@ async function getSystemStatus(): Promise<string> {
 async function getLearningInsights(): Promise<string> {
   try {
     // Check if we have any habit/pattern data
-    const habitsPath = join(__dirname, '..', '..', 'config', 'habits.json');
+    const habitsPath = configPath('habits.json');
     if (existsSync(habitsPath)) {
       const habits = JSON.parse(readFileSync(habitsPath, 'utf-8'));
       if (habits && typeof habits === 'object') {
@@ -242,7 +243,8 @@ async function getLearningInsights(): Promise<string> {
       }
     }
     return 'No usage patterns tracked yet. I will learn your habits over time.';
-  } catch {
+  } catch (err) {
+    log.debug('Failed to load learning insights', err);
     return 'Insights module not yet active.';
   }
 }
@@ -305,8 +307,8 @@ async function compileBriefing(data: BriefingData, quick: boolean): Promise<stri
       systemPrompt,
       () => { /* we collect the full response, not streaming to console */ },
     );
-  } catch {
-    // LLM unavailable — build a basic briefing manually
+  } catch (err) {
+    log.warn('LLM unavailable for briefing compilation', err);
     fullResponse = `Good ${timeOfDay}, sir. ` + dataParts.join(' ') + ' Let me know how I can help.';
   }
 

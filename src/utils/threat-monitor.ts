@@ -10,11 +10,10 @@
 
 import { fmt } from './formatter.js';
 import { speak } from './voice-output.js';
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { createLogger } from './logger.js';
+import { readJsonConfig, writeJsonConfig } from './config.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('threat-monitor');
 
 // ── Config ──
 
@@ -48,44 +47,24 @@ interface ThreatState {
 
 // ── Persistence ──
 
-function getConfigPath(filename: string): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', filename),
-    join(__dirname, '..', 'config', filename),
-  ];
-  for (const p of paths) {
-    if (existsSync(p)) return p;
-  }
-  const dir = dirname(paths[0]);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  return paths[0];
-}
-
 function loadConfig(): ThreatConfig {
-  const path = getConfigPath('threat-monitor.json');
-  try {
-    if (existsSync(path)) {
-      return { ...DEFAULT_CONFIG, ...JSON.parse(readFileSync(path, 'utf-8')) };
-    }
-  } catch { /* defaults */ }
-  writeFileSync(path, JSON.stringify(DEFAULT_CONFIG, null, 2));
-  return DEFAULT_CONFIG;
+  const loaded = readJsonConfig<Partial<ThreatConfig>>('threat-monitor.json', {});
+  if (Object.keys(loaded).length === 0) {
+    writeJsonConfig('threat-monitor.json', DEFAULT_CONFIG);
+    return DEFAULT_CONFIG;
+  }
+  return { ...DEFAULT_CONFIG, ...loaded };
 }
 
 function loadState(): ThreatState {
-  const path = getConfigPath('threat-state.json');
-  try {
-    if (existsSync(path)) return JSON.parse(readFileSync(path, 'utf-8'));
-  } catch { /* fresh */ }
-  return { lastCheck: null, seenArticles: [], alerts: [] };
+  return readJsonConfig<ThreatState>('threat-state.json', { lastCheck: null, seenArticles: [], alerts: [] });
 }
 
 function saveState(state: ThreatState): void {
-  const path = getConfigPath('threat-state.json');
   // Keep last 500 seen articles and 100 alerts
   if (state.seenArticles.length > 500) state.seenArticles = state.seenArticles.slice(-500);
   if (state.alerts.length > 100) state.alerts = state.alerts.slice(-100);
-  writeFileSync(path, JSON.stringify(state, null, 2));
+  writeJsonConfig('threat-state.json', state);
 }
 
 // ── RSS Feed Parser (simple XML extraction) ──
@@ -127,8 +106,8 @@ async function fetchRSS(url: string): Promise<FeedItem[]> {
         });
       }
     }
-  } catch {
-    // Silent fail — one feed down shouldn't stop monitoring
+  } catch (err) {
+    log.debug(`RSS feed fetch failed: ${url}`, err);
   }
   return items;
 }

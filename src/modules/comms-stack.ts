@@ -3,6 +3,9 @@ import { getBrowser, isOpen } from '../utils/browser-manager.js';
 import { llmStreamChat } from '../utils/llm.js';
 import { fmt } from '../utils/formatter.js';
 import { speak, isVoiceEnabled } from '../utils/voice-output.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('comms-stack');
 
 // ── Comms Stack ──
 // Checks specific WhatsApp chats for unread messages and prioritizes them.
@@ -217,7 +220,7 @@ export class CommsStackModule implements JarvisModule {
           try {
             await page.keyboard.press('Escape');
             await page.waitForTimeout(500);
-          } catch { /* skip */ }
+          } catch (err) { log.debug('Failed to recover from search error', err); }
         }
       }
 
@@ -277,7 +280,8 @@ Rules:
       );
       console.log('');
       return output;
-    } catch {
+    } catch (err) {
+      log.warn('LLM prioritization failed', err);
       return null;
     }
   }

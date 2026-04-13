@@ -8,12 +8,12 @@
  * Writes are batched: flushed every 10 traces or on explicit flush().
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { randomUUID } from 'crypto';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('trace-store');
 
 // ── Types ──
 
@@ -65,14 +65,8 @@ let loaded = false;
 
 // ── Path Resolution ──
 
-function resolveConfigPath(filename: string): string {
-  const configDir = join(__dirname, '..', '..', 'config');
-  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
-  return join(configDir, filename);
-}
-
 function getTracePath(): string {
-  return resolveConfigPath('traces.json');
+  return configPath('traces.json');
 }
 
 // ── Load / Save ──
@@ -88,7 +82,8 @@ function load(): void {
       if (raw && Array.isArray(raw.traces)) {
         traceData = raw;
       }
-    } catch {
+    } catch (err) {
+      log.warn('Failed to load traces.json', err);
       traceData = { version: 1, traces: [] };
     }
   }
@@ -97,7 +92,7 @@ function load(): void {
 function saveNow(): void {
   try {
     writeFileSync(getTracePath(), JSON.stringify(traceData, null, 2), 'utf-8');
-  } catch { /* ignore write errors */ }
+  } catch (err) { log.warn('Failed to save traces.json', err); }
 }
 
 function maybeSave(): void {

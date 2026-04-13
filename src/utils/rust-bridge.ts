@@ -8,8 +8,10 @@ import { spawn, ChildProcess } from 'child_process';
 import { existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { createLogger } from './logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('rust-bridge');
 
 const SIDECAR_PORT = parseInt(process.env.JARVIS_CORE_PORT ?? '7700', 10);
 const SIDECAR_URL = `http://127.0.0.1:${SIDECAR_PORT}`;
@@ -27,7 +29,8 @@ async function checkHealth(): Promise<boolean> {
   try {
     const res = await fetch(`${SIDECAR_URL}/health`, { signal: AbortSignal.timeout(2000) });
     return res.ok;
-  } catch {
+  } catch (err) {
+    log.debug('Sidecar health check failed', err);
     return false;
   }
 }
@@ -70,18 +73,18 @@ export async function startSidecar(): Promise<boolean> {
   // Already running?
   if (await checkHealth()) {
     sidecarAvailable = true;
-    console.log('[rust-bridge] Sidecar already running');
+    log.info('Sidecar already running');
     return true;
   }
 
   const binary = findBinary();
   if (!binary) {
-    console.log('[rust-bridge] Sidecar binary not found — vector search will use TS fallback');
+    log.info('Sidecar binary not found — vector search will use TS fallback');
     sidecarAvailable = false;
     return false;
   }
 
-  console.log(`[rust-bridge] Starting sidecar: ${binary}`);
+  log.info(`Starting sidecar: ${binary}`);
   sidecarProcess = spawn(binary, [], {
     env: { ...process.env, JARVIS_CORE_PORT: String(SIDECAR_PORT) },
     stdio: 'ignore',
@@ -90,7 +93,7 @@ export async function startSidecar(): Promise<boolean> {
 
   sidecarProcess.unref();
   sidecarProcess.on('exit', (code) => {
-    console.log(`[rust-bridge] Sidecar exited with code ${code}`);
+    log.info(`Sidecar exited with code ${code}`);
     sidecarAvailable = false;
     sidecarProcess = null;
   });
@@ -100,12 +103,12 @@ export async function startSidecar(): Promise<boolean> {
     await new Promise((r) => setTimeout(r, 200));
     if (await checkHealth()) {
       sidecarAvailable = true;
-      console.log('[rust-bridge] Sidecar ready');
+      log.info('Sidecar ready');
       return true;
     }
   }
 
-  console.log('[rust-bridge] Sidecar failed to start');
+  log.info('Sidecar failed to start');
   sidecarAvailable = false;
   return false;
 }
@@ -114,7 +117,7 @@ export function stopSidecar(): void {
   if (sidecarProcess) {
     try {
       sidecarProcess.kill('SIGTERM');
-    } catch { /* ignore */ }
+    } catch (err) { log.debug('Failed to kill sidecar process', err); }
     sidecarProcess = null;
   }
   sidecarAvailable = false;
@@ -136,7 +139,8 @@ async function post<T>(path: string, body: unknown): Promise<T | null> {
     });
     if (!res.ok) return null;
     return (await res.json()) as T;
-  } catch {
+  } catch (err) {
+    log.debug(`Sidecar POST ${path} failed`, err);
     return null;
   }
 }
@@ -205,7 +209,8 @@ export async function deleteDocument(id: string): Promise<boolean> {
       signal: AbortSignal.timeout(5000),
     });
     return res.ok;
-  } catch {
+  } catch (err) {
+    log.debug(`Sidecar DELETE /document/${id} failed`, err);
     return false;
   }
 }
@@ -223,7 +228,8 @@ export async function getSidecarStats(): Promise<{
     const res = await fetch(`${SIDECAR_URL}/stats`, { signal: AbortSignal.timeout(2000) });
     if (!res.ok) return null;
     return await res.json();
-  } catch {
+  } catch (err) {
+    log.debug('Sidecar GET /stats failed', err);
     return null;
   }
 }

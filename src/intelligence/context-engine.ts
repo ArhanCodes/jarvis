@@ -9,6 +9,9 @@
 
 import { getRecentConversation, getSummaries, getAllFacts } from '../core/memory.js';
 import { search, searchByType, type SearchResult } from './memory-index.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('context-engine');
 
 // ── Types ──
 
@@ -79,8 +82,8 @@ export function buildContext(
         usedTokens += tokens;
       }
     }
-  } catch {
-    // index may not be built yet
+  } catch (err) {
+    log.debug('Failed to search memory facts', err);
   }
 
   // 2. Always include core facts (user identity, key preferences) even if not query-matched
@@ -105,8 +108,8 @@ export function buildContext(
         usedTokens += tokens;
       }
     }
-  } catch {
-    // memory not loaded
+  } catch (err) {
+    log.debug('Failed to load core facts', err);
   }
 
   // 3. Pull recent conversation context
@@ -129,8 +132,8 @@ export function buildContext(
           usedTokens += tokens;
         }
       }
-    } catch {
-      // conversations not loaded
+    } catch (err) {
+      log.debug('Failed to load conversation context', err);
     }
   }
 
@@ -156,8 +159,8 @@ export function buildContext(
           usedTokens += tokens;
         }
       }
-    } catch {
-      // traces not available
+    } catch (err) {
+      log.debug('Failed to search traces', err);
     }
   }
 
@@ -180,8 +183,8 @@ export function buildContext(
         usedTokens += tokens;
       }
     }
-  } catch {
-    // summaries not loaded
+  } catch (err) {
+    log.debug('Failed to load conversation summaries', err);
   }
 
   // 6. Search all document types for any remaining query-relevant context
@@ -209,8 +212,8 @@ export function buildContext(
         usedTokens += tokens;
       }
     }
-  } catch {
-    // index not ready
+  } catch (err) {
+    log.debug('Failed to search general documents', err);
   }
 
   // Sort blocks by relevance (highest first)

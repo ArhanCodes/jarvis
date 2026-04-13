@@ -10,7 +10,9 @@
   "scripts": {
     "build": "tsc",
     "start": "node dist/bin/jarvis.js",
-    "dev": "tsx bin/jarvis.ts"
+    "dev": "tsx bin/jarvis.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@elevenlabs/elevenlabs-js": "^2.38.1",
@@ -24,7 +26,8 @@
   "devDependencies": {
     "@types/node": "^22.0.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.7.0"
+    "typescript": "^5.7.0",
+    "vitest": "^4.1.4"
   },
   "engines": {
     "node": ">=20"

@@ -3,6 +3,9 @@ import { getBrowser, closeBrowser, isOpen } from '../utils/browser-manager.js';
 import { fmt } from '../utils/formatter.js';
 import { execSync } from 'child_process';
 import { isLLMAvailable, llmStreamChat } from '../utils/llm.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('whatsapp');
 
 // ── WhatsApp Module ──
 // Send and read WhatsApp messages via WhatsApp Web + Playwright.
@@ -90,7 +93,7 @@ export class WhatsAppModule implements JarvisModule {
 
       // Bring browser window to front so user can see QR code
       await page.bringToFront();
-      try { execSync('osascript -e \'tell application "Chromium" to activate\' 2>/dev/null || osascript -e \'tell application "Google Chrome" to activate\' 2>/dev/null', { stdio: 'ignore' }); } catch { /* ok */ }
+      try { execSync('osascript -e \'tell application "Chromium" to activate\' 2>/dev/null || osascript -e \'tell application "Google Chrome" to activate\' 2>/dev/null', { stdio: 'ignore' }); } catch (err) { log.debug('Failed to activate browser window', err); }
 
       // Quick check: already logged in?
       try {
@@ -98,8 +101,8 @@ export class WhatsAppModule implements JarvisModule {
         if (loggedIn) {
           return { success: true, message: 'WhatsApp Web is already logged in! Send messages with: message <name> <message>' };
         }
-      } catch {
-        // Not logged in — QR code should be showing
+      } catch (err) {
+        log.debug('Not logged in yet, QR code should be showing', err);
       }
 
       // Return immediately — don't block the event loop waiting for QR scan.
@@ -146,8 +149,8 @@ export class WhatsAppModule implements JarvisModule {
             console.log(fmt.dim(`  [composed] "${finalMessage}"`));
           }
         }
-      } catch {
-        // AI not available — send the literal instruction as fallback
+      } catch (err) {
+        log.debug('AI not available for message composition, sending literally', err);
       }
     }
 
@@ -169,8 +172,8 @@ export class WhatsAppModule implements JarvisModule {
       const readySelector = '#side, [data-testid="chat-list"], [aria-label="Search input textbox"], div[contenteditable="true"][data-tab="3"], [data-testid="chatlist-header"]';
       try {
         await page.waitForSelector(readySelector, { timeout: 20000 });
-      } catch {
-        // Last resort: check if we're on WhatsApp and page has any content
+      } catch (err) {
+        log.debug('WhatsApp ready selector timeout, checking URL', err);
         const url = page.url();
         if (!url.includes('web.whatsapp.com')) {
           return { success: false, message: 'WhatsApp not logged in. Run "whatsapp login" first to scan the QR code.' };
@@ -202,7 +205,7 @@ export class WhatsAppModule implements JarvisModule {
           await page.keyboard.press('Control+A');
           await page.keyboard.type(contact, { delay: 30 });
           break;
-        } catch { continue; }
+        } catch (err) { log.debug(`Selector ${sel} not found, trying next`, err); continue; }
       }
 
       if (!searchClicked) {
@@ -217,7 +220,7 @@ export class WhatsAppModule implements JarvisModule {
             await page.keyboard.type(contact, { delay: 30 });
             searchClicked = true;
           }
-        } catch { /* continue */ }
+        } catch (err) { log.debug('Fallback sidebar search click failed', err); }
       }
 
       if (!searchClicked) {
@@ -271,7 +274,7 @@ export class WhatsAppModule implements JarvisModule {
           await page.keyboard.type(finalMessage, { delay: 10 });
           msgTyped = true;
           break;
-        } catch { continue; }
+        } catch (err) { log.debug(`Selector ${sel} not found, trying next`, err); continue; }
       }
 
       if (!msgTyped) {
@@ -310,7 +313,8 @@ export class WhatsAppModule implements JarvisModule {
 
       try {
         await page.waitForSelector('#side, [data-testid="chat-list"], [aria-label="Search input textbox"], div[contenteditable="true"][data-tab="3"]', { timeout: 20000 });
-      } catch {
+      } catch (err) {
+        log.debug('WhatsApp ready selector timeout in read', err);
         const url = page.url();
         if (!url.includes('web.whatsapp.com')) {
           return { success: false, message: 'WhatsApp not logged in. Run "whatsapp login" first.' };

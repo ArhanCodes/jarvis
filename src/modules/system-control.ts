@@ -1,6 +1,7 @@
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { run } from '../utils/shell.js';
 import { osascript } from '../utils/osascript.js';
+import { pushUndo } from '../core/undo-stack.js';
 
 export class SystemControlModule implements JarvisModule {
   name = 'system-control' as const;
@@ -380,8 +381,13 @@ export class SystemControlModule implements JarvisModule {
   // ── Volume ──
   private async setVolume(level: number): Promise<CommandResult> {
     const clamped = Math.max(0, Math.min(100, level));
-    const macVol = Math.round(clamped * 7 / 100); // macOS uses 0-7 scale
+    const prevVol = parseInt(await osascript('output volume of (get volume settings)'), 10) || 50;
     await osascript(`set volume output volume ${clamped}`);
+    pushUndo({
+      description: `Set volume to ${clamped}% (was ${prevVol}%)`,
+      module: 'system-control',
+      undo: async () => { await osascript(`set volume output volume ${prevVol}`); return true; },
+    });
     return { success: true, message: `Volume set to ${clamped}%` };
   }
 
@@ -390,11 +396,21 @@ export class SystemControlModule implements JarvisModule {
     const currentVol = parseInt(current, 10) || 50;
     const newVol = Math.max(0, Math.min(100, currentVol + delta));
     await osascript(`set volume output volume ${newVol}`);
+    pushUndo({
+      description: `Volume ${delta > 0 ? 'up' : 'down'} to ${newVol}% (was ${currentVol}%)`,
+      module: 'system-control',
+      undo: async () => { await osascript(`set volume output volume ${currentVol}`); return true; },
+    });
     return { success: true, message: `Volume ${delta > 0 ? 'up' : 'down'} → ${newVol}%` };
   }
 
   private async setMute(muted: boolean): Promise<CommandResult> {
     await osascript(`set volume output muted ${muted}`);
+    pushUndo({
+      description: muted ? 'Muted volume' : 'Unmuted volume',
+      module: 'system-control',
+      undo: async () => { await osascript(`set volume output muted ${!muted}`); return true; },
+    });
     return { success: true, message: muted ? 'Muted' : 'Unmuted' };
   }
 
@@ -446,6 +462,14 @@ export class SystemControlModule implements JarvisModule {
     await osascript(
       `tell application "System Events" to tell appearance preferences to set dark mode to ${on}`
     );
+    pushUndo({
+      description: `Dark mode ${on ? 'enabled' : 'disabled'}`,
+      module: 'system-control',
+      undo: async () => {
+        await osascript(`tell application "System Events" to tell appearance preferences to set dark mode to ${!on}`);
+        return true;
+      },
+    });
     return { success: true, message: `Dark mode ${on ? 'enabled' : 'disabled'}` };
   }
 

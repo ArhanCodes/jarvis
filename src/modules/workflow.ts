@@ -1,13 +1,12 @@
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { parse } from '../core/parser.js';
 import { execute } from '../core/executor.js';
 import { run } from '../utils/shell.js';
 import { fmt } from '../utils/formatter.js';
+import { configPath, readJsonConfig, writeJsonConfig } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('workflow');
 
 interface Workflow {
   name: string;
@@ -15,33 +14,12 @@ interface Workflow {
   description?: string;
 }
 
-function getWorkflowPath(): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'workflows.json'),
-    join(__dirname, '..', '..', '..', 'config', 'workflows.json'),
-  ];
-  for (const p of paths) {
-    const dir = dirname(p);
-    if (existsSync(dir)) return p;
-  }
-  return paths[0];
-}
-
 function loadWorkflows(): Record<string, Workflow> {
-  const path = getWorkflowPath();
-  try {
-    if (existsSync(path)) {
-      return JSON.parse(readFileSync(path, 'utf-8'));
-    }
-  } catch { /* ignore */ }
-  return {};
+  return readJsonConfig<Record<string, Workflow>>('workflows.json', {});
 }
 
 function saveWorkflows(workflows: Record<string, Workflow>): void {
-  const path = getWorkflowPath();
-  const dir = dirname(path);
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(path, JSON.stringify(workflows, null, 2) + '\n');
+  writeJsonConfig('workflows.json', workflows);
 }
 
 export class WorkflowModule implements JarvisModule {

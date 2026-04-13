@@ -42,6 +42,9 @@ export type { LearningInsight } from './learning-engine.js';
 import { rebuildIndex } from './memory-index.js';
 import { analyzeTracesRust } from './learning-engine.js';
 import { getTraces } from './trace-store.js';
+import { createLogger } from '../utils/logger.js';
+
+const log = createLogger('intelligence');
 
 let learningInterval: ReturnType<typeof setInterval> | null = null;
 
@@ -53,7 +56,7 @@ export function initIntelligence(): void {
   try {
     rebuildIndex();
   } catch (err) {
-    console.error('[intelligence] Failed to rebuild memory index:', err);
+    log.error('Failed to rebuild memory index', err);
   }
 
   // Run learning analysis every 30 minutes if we have enough traces
@@ -62,8 +65,8 @@ export function initIntelligence(): void {
     if (traces.length >= 20) {
       try {
         await analyzeTracesRust();
-      } catch {
-        // silent — learning is best-effort
+      } catch (err) {
+        log.debug('Learning analysis skipped', err);
       }
     }
   }, 30 * 60 * 1000);
@@ -74,7 +77,7 @@ export function initIntelligence(): void {
     if (traces.length >= 20) {
       try {
         await analyzeTracesRust();
-      } catch { /* silent */ }
+      } catch (err) { log.debug('Learning analysis skipped', err); }
     }
   }, 60_000);
 }

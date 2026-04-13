@@ -23,14 +23,15 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { createServer, Server } from 'http';
 import { conversationEngine } from '../core/conversation-engine.js';
 import { readFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { tmpdir } from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
 const execAsync = promisify(exec);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('ws-server');
 
 // ── Config ──
 
@@ -41,20 +42,14 @@ interface WatchServerConfig {
 
 function loadConfig(): WatchServerConfig {
   // Re-use voice.json for TTS provider info
-  const voicePaths = [
-    join(__dirname, '..', '..', 'config', 'voice.json'),
-    join(__dirname, '..', '..', '..', 'config', 'voice.json'),
-  ];
   let ttsProvider: 'elevenlabs' | 'edge-tts' | 'macos' = 'edge-tts';
-  for (const p of voicePaths) {
-    try {
-      if (existsSync(p)) {
-        const vc = JSON.parse(readFileSync(p, 'utf-8'));
-        ttsProvider = vc.provider || 'edge-tts';
-        break;
-      }
-    } catch { /* ignore */ }
-  }
+  const voicePath = configPath('voice.json');
+  try {
+    if (existsSync(voicePath)) {
+      const vc = JSON.parse(readFileSync(voicePath, 'utf-8'));
+      ttsProvider = vc.provider || 'edge-tts';
+    }
+  } catch (err) { log.debug('Failed to load voice config', err); }
 
   return { port: 5225, ttsProvider };
 }
@@ -68,15 +63,10 @@ interface VoiceJson {
 }
 
 function loadVoiceJson(): VoiceJson {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'voice.json'),
-    join(__dirname, '..', '..', '..', 'config', 'voice.json'),
-  ];
-  for (const p of paths) {
-    try {
-      if (existsSync(p)) return JSON.parse(readFileSync(p, 'utf-8'));
-    } catch { /* ignore */ }
-  }
+  const voicePath = configPath('voice.json');
+  try {
+    if (existsSync(voicePath)) return JSON.parse(readFileSync(voicePath, 'utf-8'));
+  } catch (err) { log.debug('Failed to load voice config', err); }
   return { provider: 'edge-tts' };
 }
 
@@ -121,11 +111,11 @@ async function generateTTSAudio(text: string): Promise<Buffer | null> {
 
     if (existsSync(tmpFile)) {
       const buf = readFileSync(tmpFile);
-      try { unlinkSync(tmpFile); } catch { /* ok */ }
+      try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up temp file', err); }
       return buf;
     }
-  } catch {
-    // Edge TTS failed — try macOS say
+  } catch (err) {
+    log.debug('Edge TTS failed, trying macOS say', err);
     try {
       const aiffFile = tmpFile.replace('.mp3', '.aiff');
       const escaped = text.replace(/'/g, "'\\''");
@@ -133,14 +123,14 @@ async function generateTTSAudio(text: string): Promise<Buffer | null> {
 
       // Convert to mp3 for the watch
       await execAsync(`afconvert -f mp4f -d aac "${aiffFile}" "${tmpFile}"`, { timeout: 10000 });
-      try { unlinkSync(aiffFile); } catch { /* ok */ }
+      try { unlinkSync(aiffFile); } catch (err) { log.debug('Failed to clean up aiff file', err); }
 
       if (existsSync(tmpFile)) {
         const buf = readFileSync(tmpFile);
-        try { unlinkSync(tmpFile); } catch { /* ok */ }
+        try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up temp file', err); }
         return buf;
       }
-    } catch { /* all TTS failed */ }
+    } catch (err) { log.debug('All TTS methods failed', err); }
   }
 
   try { unlinkSync(tmpFile); } catch { /* ok */ }
@@ -200,7 +190,7 @@ async function playAudioOnMac(text: string): Promise<void> {
         const arrayBuf = await resp.arrayBuffer();
         writeFileSync(tmpFile, Buffer.from(arrayBuf));
         await execAsync(`afplay "${tmpFile}"`).catch(() => {});
-        try { unlinkSync(tmpFile); } catch { /* ok */ }
+        try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up temp file', err); }
         return;
       }
     }
@@ -219,10 +209,10 @@ async function playAudioOnMac(text: string): Promise<void> {
 
     if (existsSync(tmpFile)) {
       await execAsync(`afplay "${tmpFile}"`).catch(() => {});
-      try { unlinkSync(tmpFile); } catch { /* ok */ }
+      try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up temp file', err); }
       return;
     }
-  } catch { /* fall through to say */ }
+  } catch (err) { log.debug('TTS playback failed, falling back to macOS say', err); }
 
   // Fallback: macOS say
   const escaped = text.replace(/'/g, "'\\''");
@@ -354,7 +344,7 @@ export function startWatchServer(): { port: number } | null {
               sendJSON(ws, { type: 'status', state: 'idle' });
             });
           }
-        } catch { /* ignore malformed */ }
+        } catch (err) { log.debug('Failed to parse WebSocket message', err); }
       });
 
       ws.on('close', () => {

@@ -1,13 +1,13 @@
 import { execSync } from 'child_process';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
 import { llmStreamChat } from '../utils/llm.js';
 import { fmt } from '../utils/formatter.js';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CONFIG_PATH = join(__dirname, '..', '..', 'config', 'homekit-shortcuts.json');
+const log = createLogger('smart-home');
+const CONFIG_PATH = configPath('homekit-shortcuts.json');
 
 interface ShortcutMapping {
   [naturalName: string]: string; // natural name -> actual shortcut name
@@ -23,8 +23,8 @@ function loadConfig(): HomeKitConfig {
   if (existsSync(CONFIG_PATH)) {
     try {
       return JSON.parse(readFileSync(CONFIG_PATH, 'utf-8')) as HomeKitConfig;
-    } catch {
-      // Corrupted config, return default
+    } catch (err) {
+      log.warn('Failed to parse homekit config', err);
     }
   }
   return { shortcuts: {}, scenes: {}, lastUpdated: '' };
@@ -43,7 +43,8 @@ function getAvailableShortcuts(): string[] {
   try {
     const output = execSync('shortcuts list', { encoding: 'utf-8', timeout: 10000 });
     return output.split('\n').map(s => s.trim()).filter(Boolean);
-  } catch {
+  } catch (err) {
+    log.debug('Failed to list shortcuts', err);
     return [];
   }
 }
@@ -188,8 +189,8 @@ export class SmartHomeModule implements JarvisModule {
         saveConfig(config);
         return matched;
       }
-    } catch {
-      // LLM unavailable, fall through
+    } catch (err) {
+      log.debug('LLM unavailable for shortcut resolution', err);
     }
 
     return null;
@@ -446,7 +447,8 @@ export class SmartHomeModule implements JarvisModule {
           ].join('\n'),
           voiceMessage: parsed.explanation,
         };
-      } catch {
+      } catch (err) {
+        log.warn('Failed to parse LLM response for smart home command', err);
         return {
           success: false,
           message: fmt.error('Failed to parse LLM response for smart home command.'),

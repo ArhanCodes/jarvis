@@ -16,8 +16,7 @@ import { parse, splitChainedCommands } from '../core/parser.js';
 import { execute } from '../core/executor.js';
 import { tryNaturalLanguageMapping } from '../modules/smart-assist.js';
 import { readFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { join } from 'path';
 import { tmpdir } from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -26,9 +25,11 @@ import { setMacProxySender, handleMacProxyResult } from '../utils/mac-proxy.js';
 import { generateTTSAudio } from '../utils/voice-output.js';
 import { getBreachStatus, runManualCheck } from '../utils/breach-monitor.js';
 import { getNetworkDevices, trustDevice, runManualScan } from '../utils/network-guardian.js';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
 const execAsync = promisify(exec);
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('aim-bridge');
 
 // ── Config ──
 
@@ -39,19 +40,14 @@ interface AIMBridgeConfig {
 }
 
 function loadAIMConfig(): AIMBridgeConfig | null {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'aim.json'),
-    join(__dirname, '..', '..', '..', 'config', 'aim.json'),
-  ];
+  const aimPath = configPath('aim.json');
 
-  for (const p of paths) {
-    try {
-      if (existsSync(p)) {
-        const config = JSON.parse(readFileSync(p, 'utf-8'));
-        if (config.url) return config;
-      }
-    } catch { /* ignore */ }
-  }
+  try {
+    if (existsSync(aimPath)) {
+      const config = JSON.parse(readFileSync(aimPath, 'utf-8'));
+      if (config.url) return config;
+    }
+  } catch (err) { log.debug('Failed to load AIM config', err); }
 
   // Also check environment variables
   if (process.env.AIM_URL) {
@@ -82,15 +78,10 @@ interface VoiceJson {
 }
 
 function loadVoiceJson(): VoiceJson {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'voice.json'),
-    join(__dirname, '..', '..', '..', 'config', 'voice.json'),
-  ];
-  for (const p of paths) {
-    try {
-      if (existsSync(p)) return JSON.parse(readFileSync(p, 'utf-8'));
-    } catch { /* ignore */ }
-  }
+  const voicePath = configPath('voice.json');
+  try {
+    if (existsSync(voicePath)) return JSON.parse(readFileSync(voicePath, 'utf-8'));
+  } catch (err) { log.debug('Failed to load voice config', err); }
   return { provider: 'edge-tts' };
 }
 
@@ -128,7 +119,7 @@ async function playAudioOnMac(text: string): Promise<void> {
         const tmpFile = join(tmpdir(), `jarvis-aim-mac-${Date.now()}.mp3`);
         writeFileSync(tmpFile, Buffer.from(await resp.arrayBuffer()));
         await execAsync(`afplay "${tmpFile}"`).catch(() => {});
-        try { unlinkSync(tmpFile); } catch { /* ok */ }
+        try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up TTS temp file', err); }
         return;
       }
     }
@@ -145,10 +136,10 @@ async function playAudioOnMac(text: string): Promise<void> {
     );
     if (existsSync(tmpFile)) {
       await execAsync(`afplay "${tmpFile}"`).catch(() => {});
-      try { unlinkSync(tmpFile); } catch { /* ok */ }
+      try { unlinkSync(tmpFile); } catch (err) { log.debug('Failed to clean up edge-tts temp file', err); }
       return;
     }
-  } catch { /* fall through */ }
+  } catch (err) { log.debug('TTS generation failed, falling back to macOS say', err); }
 
   const escaped = text.replace(/'/g, "'\\''");
   await execAsync(`say -v Daniel '${escaped}'`).catch(() => {});
@@ -453,7 +444,7 @@ function connectToAIM(config: AIMBridgeConfig): void {
       if (msg.type === 'ack') {
         console.log(`  [aim] ${msg.message}`);
       }
-    } catch { /* ignore */ }
+    } catch (err) { log.debug('Failed to parse AIM message', err); }
   });
 
   aimWs.on('close', () => {

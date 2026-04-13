@@ -1,9 +1,10 @@
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 import type { CommandResult } from './types.js';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('history');
 
 interface HistoryEntry {
   command: string;
@@ -13,35 +14,23 @@ interface HistoryEntry {
 
 const MAX_HISTORY = 500;
 
-function getHistoryPath(): string {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'history.json'),
-    join(__dirname, '..', '..', '..', 'config', 'history.json'),
-  ];
-  for (const p of paths) {
-    const dir = dirname(p);
-    if (existsSync(dir)) return p;
-  }
-  return paths[0];
-}
-
 let historyCache: HistoryEntry[] | null = null;
 
 function loadHistory(): HistoryEntry[] {
   if (historyCache) return historyCache;
-  const path = getHistoryPath();
+  const path = configPath('history.json');
   try {
     if (existsSync(path)) {
       historyCache = JSON.parse(readFileSync(path, 'utf-8'));
       return historyCache!;
     }
-  } catch { /* ignore */ }
+  } catch (err) { log.warn('Failed to load history', err); }
   historyCache = [];
   return historyCache;
 }
 
 function saveHistory(): void {
-  const path = getHistoryPath();
+  const path = configPath('history.json');
   const dir = dirname(path);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
   const history = loadHistory();

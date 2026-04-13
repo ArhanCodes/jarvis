@@ -1,8 +1,7 @@
-import { readFileSync, existsSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readJsonConfig } from './config.js';
+import { createLogger } from './logger.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('llm');
 
 // ── LLM Provider (Claude API) ──
 
@@ -18,22 +17,8 @@ let config: LLMConfig = {
 };
 
 function loadLLMConfig(): void {
-  const paths = [
-    join(__dirname, '..', '..', 'config', 'llm-config.json'),
-    join(__dirname, '..', '..', '..', 'config', 'llm-config.json'),
-  ];
-
-  for (const p of paths) {
-    if (existsSync(p)) {
-      try {
-        const data = JSON.parse(readFileSync(p, 'utf-8')) as LLMConfig;
-        config = { ...config, ...data };
-        return;
-      } catch (e) {
-        console.error(`Failed to load LLM config from ${p}:`, e);
-      }
-    }
-  }
+  const data = readJsonConfig<LLMConfig>('llm-config.json', {} as LLMConfig);
+  config = { ...config, ...data };
 }
 
 // Load config on module import

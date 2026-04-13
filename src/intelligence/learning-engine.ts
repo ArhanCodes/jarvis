@@ -5,9 +5,9 @@
  * and optimization opportunities. Persists learning state to config/learning-state.json.
  */
 
-import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { configPath } from '../utils/config.js';
+import { createLogger } from '../utils/logger.js';
 import {
   getTraces,
   getStats,
@@ -18,7 +18,7 @@ import {
 } from './trace-store.js';
 import { analyzeTraces as rustAnalyzeTraces, detectHabits as rustDetectHabits, isSidecarAvailable } from '../utils/rust-bridge.js';
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
+const log = createLogger('learning-engine');
 
 // ── Types ──
 
@@ -61,14 +61,8 @@ let stateLoaded = false;
 
 // ── Path Resolution ──
 
-function resolveConfigPath(filename: string): string {
-  const configDir = join(__dirname, '..', '..', 'config');
-  if (!existsSync(configDir)) mkdirSync(configDir, { recursive: true });
-  return join(configDir, filename);
-}
-
 function getStatePath(): string {
-  return resolveConfigPath('learning-state.json');
+  return configPath('learning-state.json');
 }
 
 // ── Load / Save ──
@@ -84,8 +78,8 @@ function loadState(): void {
       if (raw && typeof raw.version === 'number') {
         learningState = raw;
       }
-    } catch {
-      // Use default state
+    } catch (err) {
+      log.warn('Failed to load learning-state.json', err);
     }
   }
 }
@@ -93,7 +87,7 @@ function loadState(): void {
 function saveState(): void {
   try {
     writeFileSync(getStatePath(), JSON.stringify(learningState, null, 2), 'utf-8');
-  } catch { /* ignore */ }
+  } catch (err) { log.warn('Failed to save learning-state.json', err); }
 }
 
 // ── Helpers ──

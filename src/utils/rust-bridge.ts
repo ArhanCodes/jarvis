@@ -73,18 +73,18 @@ export async function startSidecar(): Promise<boolean> {
   // Already running?
   if (await checkHealth()) {
     sidecarAvailable = true;
-    log.info('Sidecar already running');
+    console.log('  [rust-bridge] Sidecar already running on port ' + SIDECAR_PORT);
     return true;
   }
 
   const binary = findBinary();
   if (!binary) {
-    log.info('Sidecar binary not found — vector search will use TS fallback');
+    console.log('  [rust-bridge] Sidecar binary not found — vector search will use TS fallback');
     sidecarAvailable = false;
     return false;
   }
 
-  log.info(`Starting sidecar: ${binary}`);
+  console.log('  [rust-bridge] Starting sidecar...');
   sidecarProcess = spawn(binary, [], {
     env: { ...process.env, JARVIS_CORE_PORT: String(SIDECAR_PORT) },
     stdio: 'ignore',
@@ -103,7 +103,7 @@ export async function startSidecar(): Promise<boolean> {
     await new Promise((r) => setTimeout(r, 200));
     if (await checkHealth()) {
       sidecarAvailable = true;
-      log.info('Sidecar ready');
+      console.log('  [rust-bridge] Sidecar ready on port ' + SIDECAR_PORT);
       return true;
     }
   }

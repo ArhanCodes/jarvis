@@ -400,7 +400,7 @@ export function boot(): void {
   initIntelligence();
 
   // Start Rust sidecar for fast vector search (non-blocking, falls back to TS)
-  startSidecar().catch(() => {});
+  startSidecar().catch((err) => log.warn('Sidecar startup failed', err));
 
   // Restore persisted scheduled tasks
   scheduler.restore();

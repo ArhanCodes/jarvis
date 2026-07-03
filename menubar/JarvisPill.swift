@@ -45,13 +45,15 @@ final class JarvisLink {
         reconnectWork?.cancel()
         let w = DispatchWorkItem { [weak self] in self?.connect() }
         reconnectWork = w
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0, execute: w)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: w)
     }
 
     private func ping() {
-        task?.sendPing { [weak self] err in
-            if err != nil { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 20) { self?.ping() }
+        guard let t = task else { return }
+        t.sendPing { [weak self] err in
+            guard let self = self, t === self.task else { return }  // stale task — ignore
+            if err != nil { self.scheduleReconnect(); return }       // dead socket → reconnect
+            DispatchQueue.main.asyncAfter(deadline: .now() + 20) { [weak self] in self?.ping() }
         }
     }
 
@@ -175,6 +177,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private var awaitingFirstToken = false
     private var scope: String? = nil
     private var pendingImage: String? = nil   // base64 PNG pasted with ⌘V
+    // Query typed while the core is still booting — fired the moment we connect.
+    private var pendingAction: (() -> Void)? = nil
+    private var pendingDeadline = Date.distantPast
 
     private let link = JarvisLink()
     private var hotKeyRef: EventHotKeyRef?
@@ -422,6 +427,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private func collapse() {
         expanded = false
         stopThinking()
+        pendingAction = nil
         clearPendingImage()
         divider.isHidden = true
         answerScroll.isHidden = true
@@ -482,14 +488,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private func runInstant(_ command: String) {
         expand()
         answerView.string = ""
-        if !link.connected {
-            stopThinking()
-            answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
+        fireOrQueue { [weak self] in self?.link.send(command) }
+    }
+
+    // Run the send now if connected; otherwise queue it and fire the moment the
+    // socket comes up (the core takes ~10s to boot after "Turn on JARVIS").
+    private func fireOrQueue(_ send: @escaping () -> Void) {
+        if link.connected {
+            streaming = true
+            startThinking()
+            send()
             return
         }
         streaming = true
         startThinking()
-        link.send(command)
+        answerView.string = "Waiting for JARVIS to come online… (if it’s off, click the waveform in the menu bar → Turn on JARVIS)"
+        pendingAction = { [weak self] in
+            guard let self = self else { return }
+            self.answerView.string = ""
+            self.streaming = true
+            self.startThinking()
+            send()
+        }
+        pendingDeadline = Date().addingTimeInterval(30)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 30) { [weak self] in
+            guard let self = self, self.pendingAction != nil, Date() >= self.pendingDeadline else { return }
+            self.pendingAction = nil
+            self.stopThinking()
+            self.answerView.string = "JARVIS didn’t come online. Click the waveform icon in the menu bar and choose “Turn on JARVIS”, then try again."
+        }
     }
 
     private func startVoiceCapture() {
@@ -585,14 +612,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             field.stringValue = ""
             expand()
             answerView.string = ""
-            if !link.connected {
-                stopThinking()
-                answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
-                return
-            }
-            streaming = true
-            startThinking()
-            link.sendVision(q, image: img)
+            fireOrQueue { [weak self] in self?.link.sendVision(q, image: img) }
             return
         }
 
@@ -607,14 +627,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         setPlaceholder("Search")
         expand()
         answerView.string = ""
-        if !link.connected {
-            stopThinking()
-            answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
-            return
-        }
-        streaming = true
-        startThinking()
-        link.send(q)
+        fireOrQueue { [weak self] in self?.link.send(q) }
     }
 
     private func appendToken(_ t: String) {
@@ -635,6 +648,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
 
     private func onConn(_ c: Bool) {
         icon.contentTintColor = c ? .secondaryLabelColor : .tertiaryLabelColor
+        // Core just came online — fire the query the user typed while it was booting.
+        if c, let go = pendingAction, Date() < pendingDeadline {
+            pendingAction = nil
+            go()
+        }
     }
 
     // MARK: NSTextFieldDelegate

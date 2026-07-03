@@ -1061,7 +1061,7 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         let dir = projectDir
         // JARVIS_NO_MENUBAR=1 → the core won't relaunch (and kill) this menubar.
         runShell("cd '\(dir)' && JARVIS_NO_MENUBAR=1 nohup npm run dev > /tmp/jarvis-core.log 2>&1 &")
-        bootingUntil = Date().addingTimeInterval(12)
+        bootingUntil = Date().addingTimeInterval(25)
         statusItem?.button?.appearsDisabled = false
         reactorView.menu?.item(withTag: 120)?.title = "Starting\u{2026}"
         reactorView.menu?.item(withTag: 100)?.title = "Status: Starting\u{2026}"

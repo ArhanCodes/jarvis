@@ -838,10 +838,8 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         // indicator (clean monochrome glyph up top with the other system icons).
         let bar = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = bar.button {
-            // "J" in a circle — unmistakably JARVIS (the old "waveform" glyph
-            // collided with WisprFlow's menu-bar icon).
-            let cfg = NSImage.SymbolConfiguration(pointSize: 16, weight: .semibold)
-            let img = NSImage(systemSymbolName: "j.circle.fill", accessibilityDescription: "JARVIS")?.withSymbolConfiguration(cfg)
+            let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+            let img = NSImage(systemSymbolName: "waveform", accessibilityDescription: "JARVIS")?.withSymbolConfiguration(cfg)
             img?.isTemplate = true   // adapts to light/dark menu bar like native icons
             button.image = img
             button.toolTip = "JARVIS"

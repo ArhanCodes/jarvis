@@ -146,6 +146,24 @@ final class ThinkingDots: NSView {
     func stop() { timer?.invalidate(); timer = nil }
 }
 
+// Cream paper + faint grid, matching jarvis.arhan.dev's hero — used as the
+// backdrop "stage" for recorded demos.
+final class DemoStageView: NSView {
+    override func draw(_ dirtyRect: NSRect) {
+        NSColor(red: 0.957, green: 0.937, blue: 0.902, alpha: 1).setFill()   // #F4EFE6
+        bounds.fill()
+        NSColor(red: 0, green: 0, blue: 0, alpha: 0.045).setStroke()
+        let step: CGFloat = 72
+        let path = NSBezierPath()
+        path.lineWidth = 1
+        var x: CGFloat = 0
+        while x <= bounds.width { path.move(to: NSPoint(x: x, y: 0)); path.line(to: NSPoint(x: x, y: bounds.height)); x += step }
+        var y: CGFloat = 0
+        while y <= bounds.height { path.move(to: NSPoint(x: 0, y: y)); path.line(to: NSPoint(x: bounds.width, y: y)); y += step }
+        path.stroke()
+    }
+}
+
 // MARK: - App
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
@@ -199,6 +217,84 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         link.onConn = { [weak self] c in self?.onConn(c) }
         link.connect()
         showPill()
+
+        // Demo hook: `runDemo` types and submits a scripted sequence so the pill
+        // can demo itself for screen recordings. Local-only trigger:
+        //   DistributedNotificationCenter "com.arhancodes.jarvis.demo.pill"
+        // Selector-based registration with .deliverImmediately — the block API
+        // defers delivery while the app is inactive (which both delayed and
+        // double-fired demos when another app was frontmost).
+        DistributedNotificationCenter.default().addObserver(
+            self, selector: #selector(demoNotification(_:)),
+            name: NSNotification.Name("com.arhancodes.jarvis.demo.pill"),
+            object: nil, suspensionBehavior: .deliverImmediately)
+    }
+
+    @objc private func demoNotification(_ note: Notification) {
+        runDemo(commands: (note.object as? String) ?? "battery|what time is it")
+    }
+
+    // MARK: self-demo (for screen recordings)
+    private var demoBackdrop: NSWindow?
+    private var demoUntil = Date.distantPast   // double-trigger guard
+
+    // Full-screen cream "stage" behind the pill so recordings don't expose
+    // whatever windows happen to be open. Matches the website's paper + grid.
+    private func showDemoBackdrop() {
+        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let w = NSWindow(contentRect: screen.frame, styleMask: [.borderless], backing: .buffered, defer: false)
+        w.level = .floating                       // below the pill's .modalPanel, above normal windows
+        w.isOpaque = true
+        w.hasShadow = false
+        w.ignoresMouseEvents = true
+        w.collectionBehavior = [.canJoinAllSpaces, .stationary]
+        let v = DemoStageView(frame: NSRect(origin: .zero, size: screen.frame.size))
+        w.contentView = v
+        w.orderFrontRegardless()
+        demoBackdrop = w
+    }
+
+    private func hideDemoBackdrop() {
+        demoBackdrop?.orderOut(nil)
+        demoBackdrop = nil
+    }
+
+    private func runDemo(commands: String) {
+        if Date() < demoUntil { return }   // a demo is already running — ignore re-delivery
+        let cmds = commands.split(separator: "|").map(String.init)
+        demoUntil = Date().addingTimeInterval(Double(cmds.count) * 7.0 + 12.0)
+        showDemoBackdrop()
+        // Park the cursor at the right edge, mid-height — off the Dock (tooltips)
+        // and out of the cropped shot. CG coords: origin top-left.
+        if let s = NSScreen.main {
+            CGWarpMouseCursorPosition(CGPoint(x: s.frame.maxX - 2, y: s.frame.height * 0.55))
+        }
+        showPill()
+        var delay: Double = 1.2
+        for cmd in cmds {
+            let typeStart = delay
+            for (i, _) in cmd.enumerated() {
+                DispatchQueue.main.asyncAfter(deadline: .now() + typeStart + Double(i) * 0.07) { [weak self] in
+                    guard let self = self else { return }
+                    self.field.stringValue = String(cmd.prefix(i + 1))
+                    // Caret to the end — otherwise the text renders selected (blue).
+                    self.field.currentEditor()?.selectedRange = NSRange(location: i + 1, length: 0)
+                }
+            }
+            let submitAt = typeStart + Double(cmd.count) * 0.07 + 0.5
+            DispatchQueue.main.asyncAfter(deadline: .now() + submitAt) { [weak self] in
+                self?.submit()
+                self?.field.stringValue = ""
+            }
+            delay = submitAt + 4.5   // let the answer stream before the next command
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 1.5) { [weak self] in
+            self?.hidePill()
+        }
+        // Keep the stage up 6s past the pill so the menubar segment can play on it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 7.5) { [weak self] in
+            self?.hideDemoBackdrop()
+        }
     }
 
     // MARK: build UI

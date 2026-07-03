@@ -847,6 +847,16 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         bar.menu = menu
         statusItem = bar
 
+        // Demo hook: opens the status menu for a few seconds so the menubar can
+        // demo itself for screen recordings. Local-only trigger:
+        //   DistributedNotificationCenter "com.arhancodes.jarvis.demo.menubar"
+        // Selector-based + .deliverImmediately so delivery isn't deferred while
+        // the app is inactive (the block API delays/coalesces in that state).
+        DistributedNotificationCenter.default().addObserver(
+            self, selector: #selector(demoNotification(_:)),
+            name: NSNotification.Name("com.arhancodes.jarvis.demo.menubar"),
+            object: nil, suspensionBehavior: .deliverImmediately)
+
         // Animation: ~30fps — drives both widget and fullscreen orb
         animTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
             let dt: CGFloat = 1.0 / 30.0
@@ -1018,6 +1028,18 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
 
     @objc func openOrb() {
         openFullScreen()
+    }
+
+    @objc func demoNotification(_ note: Notification) {
+        guard let button = statusItem?.button else { return }
+        let secs = Double(note.object as? String ?? "") ?? 3.0
+        // Menu tracking blocks the main run loop — schedule the close on a
+        // .common-mode timer BEFORE opening so it still fires during tracking.
+        let t = Timer(timeInterval: secs, repeats: false) { [weak self] _ in
+            self?.statusItem?.menu?.cancelTracking()
+        }
+        RunLoop.main.add(t, forMode: .common)
+        button.performClick(nil)
     }
 
     @objc func switchModel(_ sender: NSMenuItem) {

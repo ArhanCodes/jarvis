@@ -730,6 +730,7 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
     var window: ReactorWindow!
     var reactorView: ArcReactorView!
     var statusItem: NSStatusItem?
+    var modelItems: [NSMenuItem] = []   // Switch-model submenu items (for the checkmark)
     var animTimer: Timer?
     var pollTimer: Timer?
     var isOnline = false
@@ -798,11 +799,13 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
 
         // Switch model submenu
         let modelMenu = NSMenu()
+        modelItems = []
         for (label, id) in [("Sonnet 4.6", "claude-sonnet-4-6"), ("Opus 4.8", "claude-opus-4-8"), ("Haiku 4.5", "claude-haiku-4-5"), ("Fable 5", "claude-fable-5")] {
             let mi = NSMenuItem(title: label, action: #selector(switchModel(_:)), keyEquivalent: "")
             mi.target = self
             mi.representedObject = id
             modelMenu.addItem(mi)
+            modelItems.append(mi)
         }
         let modelParent = NSMenuItem(title: "Switch model", action: nil, keyEquivalent: "")
         modelParent.submenu = modelMenu
@@ -1004,6 +1007,8 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         menu.item(withTag: 103)?.title = "Sidecar: \(sidecar)"
         menu.item(withTag: 104)?.title = "WhatsApp: \(whatsapp)"
         menu.item(withTag: 105)?.title = "Model: \(model)"
+        // Checkmark the active model in the Switch-model submenu.
+        for mi in modelItems { mi.state = (mi.representedObject as? String == model) ? .on : .off }
         menu.item(withTag: 106)?.title = modules
         let tags = [110, 111, 112]
         for (i, tag) in tags.enumerated() {
@@ -1020,6 +1025,7 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         sendCommand("set model \(id)")
         // Optimistic update so the menu reflects it immediately.
         reactorView.menu?.item(withTag: 105)?.title = "Model: \(id)"
+        for mi in modelItems { mi.state = (mi.representedObject as? String == id) ? .on : .off }
     }
 
     // MARK: - Power (start / stop the JARVIS core)

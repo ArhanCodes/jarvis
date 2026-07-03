@@ -44,6 +44,7 @@ export type ModuleName =
   | 'deep-research'
   | 'sandbox-runner'
   | 'energy-monitor'
+  | 'builder'
   | 'whoop';
 
 export interface ParsedCommand {

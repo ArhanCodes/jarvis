@@ -30,6 +30,7 @@ watch/JarvisWatch/*.xcodeproj/xcuserdata/
 menubar/jarvis-menubar
 menubar/JarvisMenubar
 menubar/jarvis-pill
+menubar/*.app/
 
 # Miscellaneous
 plan.md

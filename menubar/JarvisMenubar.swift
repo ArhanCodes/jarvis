@@ -126,6 +126,16 @@ class ArcReactorView: NSView {
     }
 
     override func draw(_ dirtyRect: NSRect) {
+        // The gold arc-reactor is COMMENTED OUT (kept, not removed) — its full
+        // drawing lives in drawLegacyReactor() below. Re-enable the floating
+        // gold widget by uncommenting the next line:
+        // drawLegacyReactor()
+        //
+        // JARVIS now shows it's running via a native menu-bar status item
+        // (see JarvisOverlayApp.applicationDidFinishLaunching).
+    }
+
+    private func drawLegacyReactor() {
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
 
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
@@ -719,8 +729,11 @@ class FullScreenOrbWindow: NSWindow {
 class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, FullScreenDismissDelegate {
     var window: ReactorWindow!
     var reactorView: ArcReactorView!
+    var statusItem: NSStatusItem?
     var animTimer: Timer?
     var pollTimer: Timer?
+    var isOnline = false
+    var bootingUntil = Date.distantPast   // suppress the offline flicker right after "Turn on"
 
     // Fullscreen orb
     var fullScreenWindow: FullScreenOrbWindow?
@@ -752,6 +765,18 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         menu.addItem(titleItem)
         menu.addItem(.separator())
 
+        // Power toggle — start/stop the JARVIS core straight from the menu bar.
+        let powerItem = NSMenuItem(title: "Turn on JARVIS", action: #selector(togglePower), keyEquivalent: "")
+        powerItem.target = self
+        powerItem.tag = 120
+        menu.addItem(powerItem)
+        menu.addItem(.separator())
+
+        let orbItem = NSMenuItem(title: "Open energy orb", action: #selector(openOrb), keyEquivalent: "")
+        orbItem.target = self
+        menu.addItem(orbItem)
+        menu.addItem(.separator())
+
         // Helper to add a disabled, tagged info row.
         func infoRow(_ title: String, _ tag: Int) {
             let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
@@ -770,6 +795,18 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         infoRow("WhatsApp: \u{2014}", 104)
         infoRow("Model: \u{2014}", 105)
         infoRow("Modules: \u{2014}", 106)
+
+        // Switch model submenu
+        let modelMenu = NSMenu()
+        for (label, id) in [("Sonnet 4.6", "claude-sonnet-4-6"), ("Opus 4.8", "claude-opus-4-8"), ("Haiku 4.5", "claude-haiku-4-5"), ("Fable 5", "claude-fable-5")] {
+            let mi = NSMenuItem(title: label, action: #selector(switchModel(_:)), keyEquivalent: "")
+            mi.target = self
+            mi.representedObject = id
+            modelMenu.addItem(mi)
+        }
+        let modelParent = NSMenuItem(title: "Switch model", action: nil, keyEquivalent: "")
+        modelParent.submenu = modelMenu
+        menu.addItem(modelParent)
 
         menu.addItem(.separator())
 
@@ -792,7 +829,20 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         menu.addItem(quitItem)
 
         reactorView.menu = menu
-        window.orderFront(nil)
+        // window.orderFront(nil)   // gold floating widget parked — using the native menu-bar status item below
+
+        // Native menu-bar status item — the standard macOS "app is running"
+        // indicator (clean monochrome glyph up top with the other system icons).
+        let bar = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        if let button = bar.button {
+            let cfg = NSImage.SymbolConfiguration(pointSize: 15, weight: .regular)
+            let img = NSImage(systemSymbolName: "waveform", accessibilityDescription: "JARVIS")?.withSymbolConfiguration(cfg)
+            img?.isTemplate = true   // adapts to light/dark menu bar like native icons
+            button.image = img
+            button.toolTip = "JARVIS"
+        }
+        bar.menu = menu
+        statusItem = bar
 
         // Animation: ~30fps — drives both widget and fullscreen orb
         animTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
@@ -804,10 +854,7 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         // Poll status + keep widget visible
         pollTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             self?.pollStatus()
-            // Re-assert widget visibility when fullscreen is NOT open
-            if self?.isFullScreenOpen != true {
-                self?.window.orderFront(nil)
-            }
+            // (floating widget parked — nothing to re-assert; the status item persists)
         }
 
         // Local Escape monitor (works when app is active)
@@ -881,8 +928,8 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         orbView = nil
         isFullScreenOpen = false
 
-        // Bring back the small widget
-        window.orderFront(nil)
+        // (floating widget parked — the menu-bar status item is the running indicator)
+        // window.orderFront(nil)
     }
 
     // MARK: - Status polling
@@ -943,8 +990,16 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
 
     func updateMenu(state: String, voice: String, sidecar: String = "\u{2014}", whatsapp: String = "\u{2014}",
                     model: String = "\u{2014}", modules: String = "\u{2014}", recent: [String] = []) {
+        // Solid when running, dimmed when offline — a quiet native "is it up?" cue.
+        let rawOffline = state.lowercased().contains("offline")
+        let booting = Date() < bootingUntil
+        let offline = rawOffline && !booting
+        statusItem?.button?.appearsDisabled = offline
+        isOnline = !offline
         guard let menu = reactorView.menu else { return }
-        menu.item(withTag: 100)?.title = "Status: \(state)"
+        menu.item(withTag: 120)?.title = (booting && rawOffline) ? "Starting\u{2026}"
+            : (offline ? "Turn on JARVIS" : "Turn off JARVIS")
+        menu.item(withTag: 100)?.title = "Status: \((booting && rawOffline) ? "Starting\u{2026}" : state)"
         menu.item(withTag: 101)?.title = "Voice: \(voice)"
         menu.item(withTag: 103)?.title = "Sidecar: \(sidecar)"
         menu.item(withTag: 104)?.title = "WhatsApp: \(whatsapp)"
@@ -953,6 +1008,87 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         let tags = [110, 111, 112]
         for (i, tag) in tags.enumerated() {
             menu.item(withTag: tag)?.title = i < recent.count ? "  \(recent[i])" : "  \u{2014}"
+        }
+    }
+
+    @objc func openOrb() {
+        openFullScreen()
+    }
+
+    @objc func switchModel(_ sender: NSMenuItem) {
+        guard let id = sender.representedObject as? String else { return }
+        sendCommand("set model \(id)")
+        // Optimistic update so the menu reflects it immediately.
+        reactorView.menu?.item(withTag: 105)?.title = "Model: \(id)"
+    }
+
+    // MARK: - Power (start / stop the JARVIS core)
+
+    // Walk up from the executable until we find the project root (has package.json
+    // + bin/jarvis.ts). Handles both the bare binary (menubar/jarvis-menubar) and
+    // the .app bundle (menubar/JarvisMenubar.app/Contents/MacOS/…). Falls back to
+    // the usual Downloads location.
+    private var projectDir: String {
+        let fm = FileManager.default
+        var url = Bundle.main.executableURL?.resolvingSymlinksInPath()
+        for _ in 0..<7 {
+            guard let u = url else { break }
+            let candidate = u.deletingLastPathComponent()
+            if fm.fileExists(atPath: candidate.appendingPathComponent("package.json").path),
+               fm.fileExists(atPath: candidate.appendingPathComponent("bin/jarvis.ts").path) {
+                return candidate.path
+            }
+            url = candidate
+        }
+        return NSHomeDirectory() + "/Downloads/jarvis"
+    }
+
+    @objc func togglePower() {
+        if Date() < bootingUntil { return }   // a start is already in flight — ignore
+        if isOnline { stopCore() } else { startCore() }
+    }
+
+    // Run a command in a login+interactive shell so it inherits the same PATH
+    // (nvm, node, npm) the user has in their own terminal.
+    private func runShell(_ command: String) {
+        let p = Process()
+        p.executableURL = URL(fileURLWithPath: "/bin/zsh")
+        p.arguments = ["-ilc", command]
+        try? p.run()
+    }
+
+    private func startCore() {
+        let dir = projectDir
+        // JARVIS_NO_MENUBAR=1 → the core won't relaunch (and kill) this menubar.
+        runShell("cd '\(dir)' && JARVIS_NO_MENUBAR=1 nohup npm run dev > /tmp/jarvis-core.log 2>&1 &")
+        bootingUntil = Date().addingTimeInterval(12)
+        statusItem?.button?.appearsDisabled = false
+        reactorView.menu?.item(withTag: 120)?.title = "Starting\u{2026}"
+        reactorView.menu?.item(withTag: 100)?.title = "Status: Starting\u{2026}"
+    }
+
+    private func stopCore() {
+        // Kill the dev process (tsx bin/jarvis.ts) and free the watch port.
+        runShell("pkill -f 'bin/jarvis.ts'; lsof -ti tcp:5225 | xargs kill 2>/dev/null; true")
+        bootingUntil = Date.distantPast
+        isOnline = false
+        statusItem?.button?.appearsDisabled = true
+        reactorView.menu?.item(withTag: 120)?.title = "Turn on JARVIS"
+        reactorView.menu?.item(withTag: 100)?.title = "Status: Stopping\u{2026}"
+    }
+
+    // Fire a one-shot command at the running JARVIS core over the watch socket.
+    func sendCommand(_ text: String) {
+        guard let url = URL(string: "ws://127.0.0.1:5225") else { return }
+        let task = URLSession.shared.webSocketTask(with: url)
+        task.resume()
+        let payload: [String: Any] = ["type": "command", "text": text, "noAudio": true]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let str = String(data: data, encoding: .utf8) else { return }
+        task.send(.string(str)) { _ in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                task.cancel(with: .goingAway, reason: nil)
+            }
         }
     }
 

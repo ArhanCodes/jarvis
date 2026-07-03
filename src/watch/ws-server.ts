@@ -24,6 +24,8 @@ import { createServer, Server } from 'http';
 import { conversationEngine } from '../core/conversation-engine.js';
 import { parse } from '../core/parser.js';
 import { execute } from '../core/executor.js';
+import { llmVision } from '../utils/llm.js';
+import { runBuild } from '../modules/builder.js';
 import { readFileSync, existsSync, unlinkSync, writeFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
@@ -221,6 +223,40 @@ async function playAudioOnMac(text: string): Promise<void> {
   await execAsync(`say -v Daniel '${escaped}'`).catch(() => {});
 }
 
+// Analyze a pasted image with Claude vision and return the answer.
+async function handleVision(ws: WebSocket, prompt: string, image: string, mediaType: string): Promise<void> {
+  for (const client of activeClients) {
+    sendJSON(client, { type: 'status', state: 'processing', lastCommand: prompt || 'image' });
+  }
+  try {
+    const question = prompt.trim() || 'Describe this image. Be concise and specific.';
+    const answer = await llmVision([{ data: image, mediaType }], question);
+    if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: answer.trim() });
+  } finally {
+    for (const client of activeClients) sendJSON(client, { type: 'status', state: 'idle' });
+  }
+}
+
+// Claude Code-style autonomous build. Streams the agent's narration + tool
+// activity to the pill token-by-token; no TTS (builds run for minutes).
+async function handleBuild(ws: WebSocket, description: string): Promise<void> {
+  // handleCommand already broadcast a 'processing' status before routing here.
+  try {
+    const res = await runBuild(description, {
+      onText: (t) => { if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: t }); },
+      onEvent: (e) => { if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: `\n· ${e.text}\n` }); },
+    });
+    const tail = res.ok
+      ? `\n\n✅ Built in ${res.projectDir}\n   ${res.steps} steps · ${res.usedModel.replace('claude-', '')}`
+      : `\n\n⚠️ ${res.summary}`;
+    if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: tail });
+  } catch (err) {
+    if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: `\n\n⚠️ Build failed: ${(err as Error).message}` });
+  } finally {
+    for (const client of activeClients) sendJSON(client, { type: 'status', state: 'idle' });
+  }
+}
+
 async function handleCommand(ws: WebSocket, text: string, requestId: string, noAudio: boolean = false, playOnMac: boolean = false): Promise<void> {
   console.log(`  [watch] Command: "${text}" (noAudio=${noAudio}, playOnMac=${playOnMac})`);
 
@@ -235,7 +271,15 @@ async function handleCommand(ws: WebSocket, text: string, requestId: string, noA
   // engine below (which streams general answers token-by-token to the client).
   try {
     const parsed = await parse(text);
-    if (parsed && parsed.module !== 'ai-chat') {
+    // Autonomous build ("build a snake game …") — its own streaming handler.
+    if (parsed?.module === 'builder' && parsed.action === 'build') {
+      await handleBuild(ws, parsed.args.description || text.replace(/^build\s+/i, '').trim());
+      return;
+    }
+    // ai-chat's streaming actions go to the conversation engine; its
+    // deterministic ones (set-model, ai-status, clear-chat) use the fast path.
+    const aiChatStreaming = parsed?.module === 'ai-chat' && ['ask', 'summarize', 'explain'].includes(parsed.action);
+    if (parsed && !aiChatStreaming) {
       const result = await execute(parsed);
       const reply = String(result.voiceMessage || result.message || (result.success ? 'Done, sir.' : 'That didn’t work, sir.')).trim();
       if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: reply });
@@ -373,6 +417,13 @@ export function startWatchServer(): { port: number } | null {
 
           if (msg.type === 'command' && msg.text) {
             handleCommand(ws, msg.text, msg.requestId || '', msg.noAudio === true, msg.playOnMac === true).catch((err) => {
+              sendJSON(ws, { type: 'error', message: (err as Error).message });
+              sendJSON(ws, { type: 'status', state: 'idle' });
+            });
+          }
+
+          if (msg.type === 'vision' && msg.image) {
+            handleVision(ws, msg.text || '', msg.image, msg.mediaType || 'image/png').catch((err) => {
               sendJSON(ws, { type: 'error', message: (err as Error).message });
               sendJSON(ws, { type: 'status', state: 'idle' });
             });

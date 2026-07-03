@@ -1,17 +1,15 @@
-// ── JARVIS Pill — "Golden Gate" Siri-style access surface ──
+// ── JARVIS Pill — native macOS 26 "Liquid Glass" Spotlight-style launcher ──
 //
-// A compact, draggable capsule summoned with a global hotkey (default ⌥-Space).
-// Type a query; it expands into a streaming answer card. Talks to the running
-// JARVIS over the watch WebSocket (ws://127.0.0.1:5225):
-//   send  { "type":"command", "text":"...", "noAudio":true }
-//   recv  { "type":"token", "text":"..." } / { "type":"status", "state":"..." }
+// A separate glass search capsule + individual floating glass circle buttons,
+// summoned with a global hotkey (default ⌥-Space). Type a query; the capsule
+// expands into a streaming answer. Talks to JARVIS over the watch WebSocket
+// (ws://127.0.0.1:5225):  send {type:command,text,noAudio:true} / recv tokens.
 //
 // Standalone — does not touch the existing menubar app. Build with start-pill.sh.
 
 import Cocoa
 import Carbon.HIToolbox
 
-// Global trampoline so the C hotkey callback can reach the delegate.
 var gApp: AppDelegate?
 
 // MARK: - WebSocket client (Foundation-native, no deps)
@@ -93,101 +91,94 @@ final class JarvisLink {
               let str = String(data: data, encoding: .utf8) else { return }
         task?.send(.string(str)) { _ in }
     }
-}
 
-// MARK: - Glass card: frosted material + opaque-ish tint + animated glow border
-
-final class GlassCard: NSView {
-    private let effect = NSVisualEffectView()
-    private let tint = NSView()
-    private var phase: CGFloat = 0
-    private var timer: Timer?
-
-    var active = false {
-        didSet {
-            if active { startGlow() } else { stopGlow() }
-        }
-    }
-
-    override init(frame frameRect: NSRect) {
-        super.init(frame: frameRect)
-        wantsLayer = true
-        layer?.cornerRadius = 22
-        layer?.masksToBounds = true
-        layer?.borderWidth = 1
-        layer?.borderColor = NSColor(white: 1, alpha: 0.14).cgColor
-
-        effect.material = .hudWindow
-        effect.blendingMode = .behindWindow
-        effect.state = .active
-        effect.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(effect)
-
-        // Opaque-ish tint so the blurred desktop doesn't bleed through as a
-        // muddy wallpaper-coloured blob — gives a clean dark glass surface.
-        tint.wantsLayer = true
-        tint.layer?.backgroundColor = NSColor(calibratedRed: 0.08, green: 0.08, blue: 0.10, alpha: 0.62).cgColor
-        tint.translatesAutoresizingMaskIntoConstraints = false
-        addSubview(tint)
-
-        NSLayoutConstraint.activate([
-            effect.leadingAnchor.constraint(equalTo: leadingAnchor),
-            effect.trailingAnchor.constraint(equalTo: trailingAnchor),
-            effect.topAnchor.constraint(equalTo: topAnchor),
-            effect.bottomAnchor.constraint(equalTo: bottomAnchor),
-            tint.leadingAnchor.constraint(equalTo: leadingAnchor),
-            tint.trailingAnchor.constraint(equalTo: trailingAnchor),
-            tint.topAnchor.constraint(equalTo: topAnchor),
-            tint.bottomAnchor.constraint(equalTo: bottomAnchor),
-        ])
-    }
-    required init?(coder: NSCoder) { fatalError() }
-
-    private func startGlow() {
-        if timer != nil { return }
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            guard let self = self else { return }
-            self.phase += 0.045
-            // Gentle Siri-ish hue band: blue -> indigo -> violet -> pink.
-            let hue = 0.55 + (sin(self.phase) * 0.5 + 0.5) * 0.18
-            let c = NSColor(hue: hue.truncatingRemainder(dividingBy: 1.0), saturation: 0.85, brightness: 1.0, alpha: 0.95)
-            self.layer?.borderColor = c.cgColor
-            self.layer?.borderWidth = 2
-        }
-    }
-    private func stopGlow() {
-        timer?.invalidate(); timer = nil
-        layer?.borderColor = NSColor(white: 1, alpha: 0.14).cgColor
-        layer?.borderWidth = 1
+    func sendVision(_ query: String, image: String, mediaType: String = "image/png") {
+        let payload: [String: Any] = ["type": "vision", "text": query, "image": image, "mediaType": mediaType]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let str = String(data: data, encoding: .utf8) else { return }
+        task?.send(.string(str)) { _ in }
     }
 }
 
-// MARK: - The floating panel
+// MARK: - Floating panel
 
 final class PillPanel: NSPanel {
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
 }
 
+// MARK: - Thinking indicator (animated three dots, iMessage-style)
+
+final class ThinkingDots: NSView {
+    private var dots: [CALayer] = []
+    private var timer: Timer?
+    private let dotD: CGFloat = 7
+    private let gap: CGFloat = 6
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        wantsLayer = true
+        for i in 0..<3 {
+            let dot = CALayer()
+            dot.backgroundColor = NSColor.secondaryLabelColor.cgColor
+            dot.cornerRadius = dotD / 2
+            dot.frame = CGRect(x: CGFloat(i) * (dotD + gap), y: 2.5, width: dotD, height: dotD)
+            layer?.addSublayer(dot)
+            dots.append(dot)
+        }
+    }
+    required init?(coder: NSCoder) { fatalError() }
+
+    func start() {
+        stop()
+        var phase: CGFloat = 0
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            guard let self = self else { return }
+            phase += 0.14
+            for (i, dot) in self.dots.enumerated() {
+                let a = 0.25 + 0.75 * (0.5 + 0.5 * sin(phase - CGFloat(i) * 0.7))
+                dot.opacity = Float(a)
+            }
+        }
+    }
+    func stop() { timer?.invalidate(); timer = nil }
+}
+
 // MARK: - App
 
 final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
+    // Geometry
+    private let MARGIN: CGFloat = 10
+    private let CAPSULE_W: CGFloat = 430
+    private let ROW_H: CGFloat = 56
+    private let EXPANDED_SEARCH_H: CGFloat = 360
+    private let CIRCLE_D: CGFloat = 50
+    private let CIRCLE_GAP: CGFloat = 12
+    private let CAPSULE_GAP: CGFloat = 16
+    private var panelW: CGFloat = 0
+
     private var panel: PillPanel!
-    private var card: GlassCard!
+    private var container: NSView!
+    private var searchGlass: NSGlassEffectView!
+    private var searchHost: NSView!
     private var field: NSTextField!
     private var icon: NSImageView!
-    private var statusDot: NSView!
     private var divider: NSBox!
     private var answerScroll: NSScrollView!
     private var answerView: NSTextView!
+    private var searchHeight: NSLayoutConstraint!
     private var answerHeight: NSLayoutConstraint!
+    private var askCircle: NSGlassEffectView!
+    private var researchCircle: NSGlassEffectView!
+    private var buildCircle: NSGlassEffectView!
+    private var thinking: ThinkingDots!
+    private var awaitingFirstToken = false
+    private var scope: String? = nil
+    private var pendingImage: String? = nil   // base64 PNG pasted with ⌘V
+
     private let link = JarvisLink()
     private var hotKeyRef: EventHotKeyRef?
     private var clickMonitor: Any?
-
-    private let pillW: CGFloat = 660
-    private let collapsedH: CGFloat = 62
-    private let expandedH: CGFloat = 380
     private var expanded = false
     private var streaming = false
 
@@ -196,6 +187,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         NSApp.setActivationPolicy(.accessory)
         buildPanel()
         registerHotKey()
+        installPasteMonitor()
         link.onToken = { [weak self] t in self?.appendToken(t) }
         link.onStatus = { [weak self] s in self?.onStatus(s) }
         link.onConn = { [weak self] c in self?.onConn(c) }
@@ -205,61 +197,69 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
 
     // MARK: build UI
     private func buildPanel() {
+        let circlesW = CIRCLE_D * 6 + CIRCLE_GAP * 5
+        panelW = MARGIN + CAPSULE_W + CAPSULE_GAP + circlesW + MARGIN
+        let collapsedPanelH = MARGIN * 2 + ROW_H
+
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let sf = screen.frame
         panel = PillPanel(
-            contentRect: NSRect(x: sf.midX - pillW / 2, y: sf.maxY - 200, width: pillW, height: collapsedH),
+            contentRect: NSRect(x: sf.midX - panelW / 2, y: sf.maxY - 220, width: panelW, height: collapsedPanelH),
             styleMask: [.borderless, .nonactivatingPanel], backing: .buffered, defer: false)
-        panel.appearance = NSAppearance(named: .darkAqua)   // consistent dark glass in any system theme
+        // No forced appearance — the glass + label colors adapt to the system
+        // and the desktop behind, exactly like the native Spotlight.
         panel.isFloatingPanel = true
         panel.level = .modalPanel
         panel.isOpaque = false
-        panel.backgroundColor = .clear
-        panel.hasShadow = true
+        panel.backgroundColor = .clear           // transparent → glass pieces float separately
+        panel.hasShadow = false                  // each glass piece casts its own shadow
         panel.isMovableByWindowBackground = true
         panel.hidesOnDeactivate = false
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
 
-        card = GlassCard(frame: NSRect(x: 0, y: 0, width: pillW, height: collapsedH))
-        card.autoresizingMask = [.width, .height]
-        panel.contentView = card
+        container = NSView(frame: NSRect(x: 0, y: 0, width: panelW, height: collapsedPanelH))
+        container.autoresizingMask = [.width, .height]
+        panel.contentView = container
 
-        let cream = NSColor(calibratedRed: 0.96, green: 0.94, blue: 0.90, alpha: 1.0)
+        // ── Search capsule (its own glass) ──
+        searchGlass = NSGlassEffectView()
+        searchGlass.translatesAutoresizingMaskIntoConstraints = false
+        searchGlass.cornerRadius = ROW_H / 2
+        searchHost = NSView()
+        searchHost.translatesAutoresizingMaskIntoConstraints = false
+        searchGlass.contentView = searchHost
+        container.addSubview(searchGlass)
 
         icon = NSImageView()
         icon.translatesAutoresizingMaskIntoConstraints = false
-        if let img = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "JARVIS") {
-            icon.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 19, weight: .medium))
+        if let img = NSImage(systemSymbolName: "magnifyingglass", accessibilityDescription: "Search") {
+            icon.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         }
-        icon.contentTintColor = .white
-        card.addSubview(icon)
+        icon.contentTintColor = .secondaryLabelColor
+        searchHost.addSubview(icon)
 
         field = NSTextField()
         field.translatesAutoresizingMaskIntoConstraints = false
         field.isBordered = false
         field.drawsBackground = false
         field.focusRingType = .none
-        field.font = NSFont.systemFont(ofSize: 21, weight: .regular)
-        field.textColor = cream
-        field.placeholderString = ""   // no "Ask JARVIS" label — clean bar
+        field.font = NSFont.systemFont(ofSize: 19, weight: .regular)
+        field.textColor = .labelColor
+        field.placeholderAttributedString = NSAttributedString(
+            string: "Search",
+            attributes: [.foregroundColor: NSColor.placeholderTextColor,
+                         .font: NSFont.systemFont(ofSize: 19, weight: .regular)])
         field.delegate = self
         field.cell?.usesSingleLineMode = true
         field.cell?.wraps = false
         field.cell?.isScrollable = true
-        card.addSubview(field)
-
-        statusDot = NSView()
-        statusDot.translatesAutoresizingMaskIntoConstraints = false
-        statusDot.wantsLayer = true
-        statusDot.layer?.cornerRadius = 4
-        statusDot.layer?.backgroundColor = NSColor.systemRed.cgColor
-        card.addSubview(statusDot)
+        searchHost.addSubview(field)
 
         divider = NSBox()
         divider.boxType = .separator
         divider.translatesAutoresizingMaskIntoConstraints = false
         divider.isHidden = true
-        card.addSubview(divider)
+        searchHost.addSubview(divider)
 
         answerScroll = NSScrollView()
         answerScroll.translatesAutoresizingMaskIntoConstraints = false
@@ -267,15 +267,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         answerScroll.hasVerticalScroller = true
         answerScroll.borderType = .noBorder
         answerScroll.isHidden = true
-
         answerView = NSTextView()
         answerView.isEditable = false
         answerView.isSelectable = true
         answerView.drawsBackground = false
-        answerView.textColor = NSColor(white: 1, alpha: 0.92)
+        answerView.textColor = .labelColor
         answerView.font = NSFont.systemFont(ofSize: 15)
         answerView.textContainerInset = NSSize(width: 6, height: 8)
-        // Correct NSTextView-in-scrollview setup so text actually lays out.
         answerView.minSize = NSSize(width: 0, height: 0)
         answerView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         answerView.isVerticallyResizable = true
@@ -283,34 +281,86 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         answerView.autoresizingMask = [.width]
         answerView.textContainer?.widthTracksTextView = true
         answerScroll.documentView = answerView
-        card.addSubview(answerScroll)
+        searchHost.addSubview(answerScroll)
 
+        thinking = ThinkingDots(frame: .zero)
+        thinking.translatesAutoresizingMaskIntoConstraints = false
+        thinking.isHidden = true
+        searchHost.addSubview(thinking)
+
+        // ── Separate glass circle buttons ──
+        askCircle = makeGlassCircle("apple.intelligence", key: "1", tip: "Ask JARVIS", action: #selector(tapAsk))
+        let screenC = makeGlassCircle("eye.fill", key: "2", tip: "Read my screen", action: #selector(tapScreen))
+        researchCircle = makeGlassCircle("globe", key: "3", tip: "Web research", action: #selector(tapResearch))
+        let bodyC = makeGlassCircle("heart.fill", key: "4", tip: "WHOOP body status", action: #selector(tapBody))
+        let voiceC = makeGlassCircle("mic.fill", key: "5", tip: "Speak to JARVIS", action: #selector(tapVoice))
+        buildCircle = makeGlassCircle("hammer.fill", key: "6", tip: "Build a project (Fable)", action: #selector(tapBuild))
+        let circles = NSStackView(views: [askCircle, screenC, researchCircle, bodyC, voiceC, buildCircle])
+        circles.orientation = .horizontal
+        circles.spacing = CIRCLE_GAP
+        circles.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(circles)
+
+        searchHeight = searchGlass.heightAnchor.constraint(equalToConstant: ROW_H)
         answerHeight = answerScroll.heightAnchor.constraint(equalToConstant: 0)
 
         NSLayoutConstraint.activate([
-            icon.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 22),
-            icon.topAnchor.constraint(equalTo: card.topAnchor, constant: 18),
-            icon.widthAnchor.constraint(equalToConstant: 26),
-            icon.heightAnchor.constraint(equalToConstant: 26),
+            searchGlass.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: MARGIN),
+            searchGlass.topAnchor.constraint(equalTo: container.topAnchor, constant: MARGIN),
+            searchGlass.widthAnchor.constraint(equalToConstant: CAPSULE_W),
+            searchHeight,
 
-            statusDot.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -22),
-            statusDot.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
-            statusDot.widthAnchor.constraint(equalToConstant: 8),
-            statusDot.heightAnchor.constraint(equalToConstant: 8),
+            circles.leadingAnchor.constraint(equalTo: searchGlass.trailingAnchor, constant: CAPSULE_GAP),
+            circles.centerYAnchor.constraint(equalTo: container.topAnchor, constant: MARGIN + ROW_H / 2),
 
-            field.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 12),
-            field.trailingAnchor.constraint(equalTo: statusDot.leadingAnchor, constant: -12),
+            icon.leadingAnchor.constraint(equalTo: searchHost.leadingAnchor, constant: 20),
+            icon.topAnchor.constraint(equalTo: searchHost.topAnchor, constant: (ROW_H - 22) / 2),
+            icon.widthAnchor.constraint(equalToConstant: 22),
+            icon.heightAnchor.constraint(equalToConstant: 22),
+
+            field.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
+            field.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
             field.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
 
-            divider.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 18),
-            divider.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -18),
+            divider.leadingAnchor.constraint(equalTo: searchHost.leadingAnchor, constant: 18),
+            divider.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
             divider.topAnchor.constraint(equalTo: icon.bottomAnchor, constant: 14),
 
-            answerScroll.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
-            answerScroll.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            answerScroll.leadingAnchor.constraint(equalTo: searchHost.leadingAnchor, constant: 16),
+            answerScroll.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -16),
             answerScroll.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 8),
             answerHeight,
+
+            thinking.leadingAnchor.constraint(equalTo: searchHost.leadingAnchor, constant: 24),
+            thinking.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 18),
+            thinking.widthAnchor.constraint(equalToConstant: 33),
+            thinking.heightAnchor.constraint(equalToConstant: 12),
         ])
+    }
+
+    private func makeGlassCircle(_ symbol: String, key: String, tip: String, action: Selector) -> NSGlassEffectView {
+        let g = NSGlassEffectView()
+        g.translatesAutoresizingMaskIntoConstraints = false
+        g.cornerRadius = CIRCLE_D / 2
+        let b = NSButton()
+        b.translatesAutoresizingMaskIntoConstraints = false
+        b.isBordered = false
+        b.bezelStyle = .regularSquare
+        b.title = ""
+        b.imagePosition = .imageOnly
+        if let img = NSImage(systemSymbolName: symbol, accessibilityDescription: tip) {
+            b.image = img.withSymbolConfiguration(NSImage.SymbolConfiguration(pointSize: 16, weight: .regular))
+        }
+        b.contentTintColor = .secondaryLabelColor
+        b.target = self
+        b.action = action
+        b.keyEquivalent = key
+        b.keyEquivalentModifierMask = .command
+        b.toolTip = "\(tip) (⌘\(key))"
+        g.contentView = b
+        g.widthAnchor.constraint(equalToConstant: CIRCLE_D).isActive = true
+        g.heightAnchor.constraint(equalToConstant: CIRCLE_D).isActive = true
+        return g
     }
 
     // MARK: hotkey (⌥-Space)
@@ -320,7 +370,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             DispatchQueue.main.async { gApp?.togglePill() }
             return noErr
         }, 1, &spec, nil, nil)
-        let id = EventHotKeyID(signature: OSType(0x4A505431) /* 'JPT1' */, id: 1)
+        let id = EventHotKeyID(signature: OSType(0x4A505431), id: 1)
         RegisterEventHotKey(UInt32(kVK_Space), UInt32(optionKey), id, GetApplicationEventTarget(), 0, &hotKeyRef)
     }
 
@@ -347,7 +397,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let sf = screen.frame
         let h = panel.frame.height
-        panel.setFrame(NSRect(x: sf.midX - pillW / 2, y: sf.maxY - 200 - (h - collapsedH), width: pillW, height: h), display: true)
+        panel.setFrame(NSRect(x: sf.midX - panelW / 2, y: sf.maxY - 220 - (h - (MARGIN * 2 + ROW_H)),
+                              width: panelW, height: h), display: true)
     }
 
     private func installClickMonitor() {
@@ -359,73 +410,234 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         if let m = clickMonitor { NSEvent.removeMonitor(m); clickMonitor = nil }
     }
 
-    // MARK: expand / collapse
+    // MARK: expand / collapse  (only the search capsule grows; circles stay put)
     private func expand() {
         guard !expanded else { return }
         expanded = true
         divider.isHidden = false
         answerScroll.isHidden = false
-        answerHeight.constant = expandedH - collapsedH - 24
-        setWindowHeight(expandedH, animate: true)
+        answerHeight.constant = EXPANDED_SEARCH_H - ROW_H - 28
+        setSearchHeight(EXPANDED_SEARCH_H, animate: true)
     }
     private func collapse() {
         expanded = false
+        stopThinking()
+        clearPendingImage()
         divider.isHidden = true
         answerScroll.isHidden = true
         answerView.string = ""
         answerHeight.constant = 0
-        setWindowHeight(collapsedH, animate: false)
+        setSearchHeight(ROW_H, animate: false)
     }
-    private func setWindowHeight(_ h: CGFloat, animate: Bool) {
+    private func setSearchHeight(_ h: CGFloat, animate: Bool) {
+        searchHeight.constant = h
+        let panelH = MARGIN * 2 + h
         let f = panel.frame
-        let newFrame = NSRect(x: f.minX, y: f.maxY - h, width: pillW, height: h)
+        let newFrame = NSRect(x: f.minX, y: f.maxY - panelH, width: panelW, height: panelH)
         if animate {
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 0.2
                 ctx.timingFunction = CAMediaTimingFunction(name: .easeOut)
                 panel.animator().setFrame(newFrame, display: true)
+                container.layoutSubtreeIfNeeded()
             }
         } else {
             panel.setFrame(newFrame, display: true)
         }
     }
 
-    // MARK: submit + stream
-    private func submit() {
-        let q = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return }
+    // MARK: quick-action buttons
+    @objc private func tapAsk() { toggleScope("ask") }
+    @objc private func tapResearch() { toggleScope("research") }
+    @objc private func tapScreen() { runInstant("what's on my screen") }
+    @objc private func tapBody() { runInstant("how's my body") }
+    @objc private func tapVoice() { startVoiceCapture() }
+    @objc private func tapBuild() {
+        toggleScope("build")
+        // Nudge the placeholder so it's obvious what typing here will do now.
+        setPlaceholder(scope == "build" ? "Describe a project to build…" : "Search")
+    }
+
+    private func toggleScope(_ s: String) {
+        scope = (scope == s) ? nil : s
+        let on = NSColor(white: 1, alpha: 0.22)
+        askCircle.tintColor = scope == "ask" ? on : nil
+        researchCircle.tintColor = scope == "research" ? on : nil
+        buildCircle.tintColor = scope == "build" ? on : nil
+        panel.makeFirstResponder(field)
+    }
+
+    private func startThinking() {
+        awaitingFirstToken = true
+        answerView.string = ""
+        thinking.isHidden = false
+        thinking.start()
+    }
+    private func stopThinking() {
+        awaitingFirstToken = false
+        thinking.stop()
+        thinking.isHidden = true
+    }
+
+    private func runInstant(_ command: String) {
         expand()
         answerView.string = ""
         if !link.connected {
+            stopThinking()
             answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
             return
         }
         streaming = true
-        card.active = true
+        startThinking()
+        link.send(command)
+    }
+
+    private func startVoiceCapture() {
+        let exeDir = URL(fileURLWithPath: CommandLine.arguments[0]).deletingLastPathComponent()
+        let helper = exeDir.deletingLastPathComponent().appendingPathComponent(".voice/voice-helper")
+        guard FileManager.default.fileExists(atPath: helper.path) else {
+            expand(); answerView.string = "Voice helper isn’t built yet — use JARVIS voice once (say “voice on”), then try the mic."
+            return
+        }
+        field.stringValue = ""
+        DispatchQueue.global().async {
+            let p = Process()
+            p.executableURL = helper
+            p.arguments = ["4"]
+            let pipe = Pipe()
+            p.standardOutput = pipe
+            try? p.run()
+            p.waitUntilExit()
+            let data = pipe.fileHandleForReading.readDataToEndOfFile()
+            let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            DispatchQueue.main.async {
+                if !text.isEmpty { self.field.stringValue = text; self.submit() }
+            }
+        }
+    }
+
+    // MARK: paste-an-image
+    private func installPasteMonitor() {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+            guard let self = self, self.panel.isKeyWindow else { return event }
+            if event.modifierFlags.contains(.command), event.charactersIgnoringModifiers?.lowercased() == "v",
+               let b64 = self.grabClipboardImage() {
+                self.pendingImage = b64
+                self.setSearchSymbol("photo.fill")
+                self.setPlaceholder("Ask about the image, or press Enter")
+                return nil   // consume — don't dump image bytes into the text field
+            }
+            return event
+        }
+    }
+
+    private func grabClipboardImage() -> String? {
+        let pb = NSPasteboard.general
+        guard let imgs = pb.readObjects(forClasses: [NSImage.self], options: nil) as? [NSImage],
+              let img = imgs.first else { return nil }
+        return pngBase64(downscale(img, maxDim: 1568))
+    }
+
+    private func downscale(_ image: NSImage, maxDim: CGFloat) -> NSImage {
+        let s = image.size
+        let scale = min(1, maxDim / max(s.width, s.height))
+        if scale >= 1 { return image }
+        let newSize = NSSize(width: s.width * scale, height: s.height * scale)
+        let out = NSImage(size: newSize)
+        out.lockFocus()
+        image.draw(in: NSRect(origin: .zero, size: newSize),
+                   from: NSRect(origin: .zero, size: s), operation: .copy, fraction: 1)
+        out.unlockFocus()
+        return out
+    }
+
+    private func pngBase64(_ image: NSImage) -> String? {
+        guard let tiff = image.tiffRepresentation, let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { return nil }
+        return png.base64EncodedString()
+    }
+
+    private func setSearchSymbol(_ symbol: String) {
+        let cfg = NSImage.SymbolConfiguration(pointSize: 16, weight: .medium)
+        icon.image = NSImage(systemSymbolName: symbol, accessibilityDescription: nil)?.withSymbolConfiguration(cfg)
+    }
+
+    private func setPlaceholder(_ text: String) {
+        field.placeholderAttributedString = NSAttributedString(
+            string: text,
+            attributes: [.foregroundColor: NSColor.placeholderTextColor,
+                         .font: NSFont.systemFont(ofSize: 19, weight: .regular)])
+    }
+
+    private func clearPendingImage() {
+        pendingImage = nil
+        setSearchSymbol("magnifyingglass")
+        setPlaceholder("Search")
+    }
+
+    // MARK: submit + stream
+    private func submit() {
+        var q = field.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Pasted image → vision (a question is optional).
+        if let img = pendingImage {
+            clearPendingImage()
+            field.stringValue = ""
+            expand()
+            answerView.string = ""
+            if !link.connected {
+                stopThinking()
+                answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
+                return
+            }
+            streaming = true
+            startThinking()
+            link.sendVision(q, image: img)
+            return
+        }
+
+        guard !q.isEmpty else { return }
+        if scope == "ask" { q = "ask \(q)" }
+        else if scope == "research" { q = "research \(q)" }
+        else if scope == "build" { q = "build \(q)" }
+        scope = nil
+        askCircle.tintColor = nil
+        researchCircle.tintColor = nil
+        buildCircle.tintColor = nil
+        setPlaceholder("Search")
+        expand()
+        answerView.string = ""
+        if !link.connected {
+            stopThinking()
+            answerView.string = "JARVIS isn’t running. Start it (npm run dev), then try again."
+            return
+        }
+        streaming = true
+        startThinking()
         link.send(q)
     }
 
     private func appendToken(_ t: String) {
+        if awaitingFirstToken { stopThinking() }   // first token in → drop the dots
         answerView.textStorage?.append(NSAttributedString(
             string: t,
-            attributes: [.foregroundColor: NSColor(white: 1, alpha: 0.92),
+            attributes: [.foregroundColor: NSColor.labelColor,
                          .font: NSFont.systemFont(ofSize: 15)]))
         answerView.scrollToEndOfDocument(nil)
     }
 
     private func onStatus(_ s: String) {
         switch s {
-        case "processing", "speaking", "activated": card.active = true
-        case "idle": if streaming { streaming = false; card.active = false }
+        case "idle": streaming = false; stopThinking()
         default: break
         }
     }
 
     private func onConn(_ c: Bool) {
-        statusDot.layer?.backgroundColor = (c ? NSColor.systemGreen : NSColor.systemRed).cgColor
+        icon.contentTintColor = c ? .secondaryLabelColor : .tertiaryLabelColor
     }
 
-    // MARK: NSTextFieldDelegate — Enter submits, Esc hides
+    // MARK: NSTextFieldDelegate
     func control(_ control: NSControl, textView: NSTextView, doCommandBy sel: Selector) -> Bool {
         if sel == #selector(NSResponder.insertNewline(_:)) { submit(); return true }
         if sel == #selector(NSResponder.cancelOperation(_:)) { hidePill(); return true }

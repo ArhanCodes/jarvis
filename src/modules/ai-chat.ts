@@ -2,7 +2,8 @@ import { readFileSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { homedir } from 'os';
 import type { JarvisModule, ParsedCommand, CommandResult, PatternDefinition } from '../core/types.js';
-import { llmStreamChat, isLLMAvailable, getActiveLLMProvider } from '../utils/llm.js';
+import { llmStreamChat, isLLMAvailable, getActiveLLMProvider, setClaudeModel, resolveModel } from '../utils/llm.js';
+import { reportModel } from '../utils/status-reporter.js';
 import { fmt } from '../utils/formatter.js';
 import { conversationEngine } from '../core/conversation-engine.js';
 import { clearConversation, getRecentConversation } from '../core/memory.js';
@@ -29,6 +30,14 @@ export class AIChatModule implements JarvisModule {
   description = 'Chat with AI via Claude API';
 
   patterns: PatternDefinition[] = [
+    {
+      intent: 'set-model',
+      patterns: [
+        /^(?:set|change|switch)\s+(?:the\s+)?(?:model|llm)\s+(?:to\s+)?(.+)$/i,
+        /^(?:use|switch\s+to)\s+(fable|opus|sonnet|haiku|claude-[\w.-]+)(?:\s+model)?$/i,
+      ],
+      extract: (match) => ({ model: (match[1] || '').trim() }),
+    },
     {
       intent: 'ask',
       patterns: [
@@ -80,6 +89,7 @@ export class AIChatModule implements JarvisModule {
 
   async execute(command: ParsedCommand): Promise<CommandResult> {
     switch (command.action) {
+      case 'set-model':    return this.handleSetModel(command.args.model);
       case 'ask':          return this.handleAsk(command.args.prompt);
       case 'summarize':    return this.handleSummarize(command.args.file);
       case 'explain':      return this.handleExplain(command.args.file);
@@ -98,6 +108,25 @@ export class AIChatModule implements JarvisModule {
     return {
       success: false,
       message: 'Claude API is not configured. Set your API key in config/llm-config.json to enable AI features.',
+    };
+  }
+
+  private handleSetModel(name: string): CommandResult {
+    const id = resolveModel(name || '');
+    if (!id) {
+      return {
+        success: false,
+        message: `Unknown model "${name}". Try: fable, opus, sonnet, or haiku.`,
+        voiceMessage: 'I don’t know that model, sir. Try fable, opus, sonnet, or haiku.',
+      };
+    }
+    setClaudeModel(id);
+    reportModel(id);
+    const short = id.replace('claude-', '').replace(/-/g, ' ');
+    return {
+      success: true,
+      message: `Model switched to ${id}.`,
+      voiceMessage: `Switched to ${short}, sir.`,
     };
   }
 

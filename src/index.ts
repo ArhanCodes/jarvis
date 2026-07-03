@@ -49,6 +49,7 @@ import { startNetworkGuardian, stopNetworkGuardian, getNetworkDevices, trustDevi
 import { startThreatMonitor, stopThreatMonitor } from './utils/threat-monitor.js';
 import { CommsStackModule } from './modules/comms-stack.js';
 import { DevAgentModule } from './modules/dev-agent.js';
+import { BuilderModule } from './modules/builder.js';
 import { ComputerControlModule } from './modules/computer-control.js';
 import { DesktopControlModule } from './modules/desktop-control.js';
 import { YouTubeToolsModule } from './modules/youtube-tools.js';
@@ -380,6 +381,7 @@ export function boot(): void {
   registry.register(new SiteMonitorModule());
   registry.register(new ScreenInteractModule());
   registry.register(new DossierModule());
+  registry.register(new BuilderModule());   // before dev-agent so "build ..." routes to the agentic builder
   registry.register(new DevAgentModule());
   registry.register(new ComputerControlModule());
   registry.register(new DesktopControlModule());
@@ -459,8 +461,10 @@ export function boot(): void {
   startThreatMonitor();
   if (IS_MAC) startBackgroundIntelligence();
 
-  // Auto-launch menubar app (Mac only)
-  if (IS_MAC) {
+  // Auto-launch menubar app (Mac only). Skipped when started FROM the menubar's
+  // "Turn on JARVIS" (JARVIS_NO_MENUBAR=1) — that menubar is already running and
+  // start-menubar.sh would otherwise kill it out from under the click.
+  if (IS_MAC && process.env.JARVIS_NO_MENUBAR !== '1') {
     const menubarScript = projectPath('menubar', 'start-menubar.sh');
     if (existsSync(menubarScript)) {
       exec(`bash "${menubarScript}"`, { cwd: projectPath('menubar') });
@@ -471,10 +475,11 @@ export function boot(): void {
   console.log(fmt.info(getStartupGreeting()));
   runStartupCommands();
 
-  // On Linux VPS: no TTY, so skip readline and run as a headless daemon.
-  // JARVIS stays alive via AIM bridge (WebSocket keep-alive).
-  if (!IS_MAC) {
-    console.log(fmt.info('Running in VPS daemon mode — commands via AIM only.'));
+  // No TTY (Linux VPS, or launched detached from the menubar's "Turn on JARVIS"):
+  // skip the interactive readline REPL — it would hit EOF on /dev/null and quit
+  // instantly. Run headless instead; the watch server (pill) + voice stay alive.
+  if (!IS_MAC || !process.stdin.isTTY) {
+    console.log(fmt.info('Running headless (no terminal) — commands via pill / watch / voice.'));
 
     // Keep process alive
     const keepAlive = setInterval(() => {}, 60000);

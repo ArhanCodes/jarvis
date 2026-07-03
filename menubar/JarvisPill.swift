@@ -165,6 +165,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private var searchHost: NSView!
     private var field: NSTextField!
     private var icon: NSImageView!
+    private var modelLabel: NSTextField!   // dim active-model tag on the right
     private var divider: NSBox!
     private var answerScroll: NSScrollView!
     private var answerView: NSTextView!
@@ -260,6 +261,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         field.cell?.isScrollable = true
         searchHost.addSubview(field)
 
+        // Dim active-model tag, right-aligned in the search capsule.
+        modelLabel = NSTextField(labelWithString: "")
+        modelLabel.translatesAutoresizingMaskIntoConstraints = false
+        modelLabel.font = NSFont.systemFont(ofSize: 12, weight: .medium)
+        modelLabel.textColor = .tertiaryLabelColor
+        modelLabel.alignment = .right
+        modelLabel.toolTip = "Active model"
+        modelLabel.setContentHuggingPriority(.required, for: .horizontal)
+        modelLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
+        searchHost.addSubview(modelLabel)
+
         divider = NSBox()
         divider.boxType = .separator
         divider.translatesAutoresizingMaskIntoConstraints = false
@@ -324,8 +336,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             icon.heightAnchor.constraint(equalToConstant: 22),
 
             field.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
-            field.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
+            field.trailingAnchor.constraint(equalTo: modelLabel.leadingAnchor, constant: -8),
             field.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
+
+            modelLabel.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
+            modelLabel.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
 
             divider.leadingAnchor.constraint(equalTo: searchHost.leadingAnchor, constant: 18),
             divider.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
@@ -384,11 +399,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
 
     func showPill() {
         collapse()
+        refreshModelLabel()
         positionTopCenter()
         NSApp.activate(ignoringOtherApps: true)
         panel.makeKeyAndOrderFront(nil)
         panel.makeFirstResponder(field)
         installClickMonitor()
+    }
+
+    // Read the active model the core reports in its status file and show a short
+    // tag (e.g. "haiku 4.5") on the right of the search bar.
+    private func refreshModelLabel() {
+        guard let data = FileManager.default.contents(atPath: "/tmp/jarvis-status.json"),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let model = obj["model"] as? String, !model.isEmpty else {
+            modelLabel.stringValue = ""
+            return
+        }
+        // "claude-haiku-4-5" -> "haiku 4.5", "claude-fable-5" -> "fable 5"
+        let raw = model.replacingOccurrences(of: "claude-", with: "")
+        if let dash = raw.firstIndex(of: "-") {
+            let name = String(raw[..<dash])
+            let version = raw[raw.index(after: dash)...].replacingOccurrences(of: "-", with: ".")
+            modelLabel.stringValue = "\(name) \(version)"
+        } else {
+            modelLabel.stringValue = raw
+        }
     }
 
     func hidePill() {
@@ -641,13 +677,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
 
     private func onStatus(_ s: String) {
         switch s {
-        case "idle": streaming = false; stopThinking()
+        case "idle": streaming = false; stopThinking(); refreshModelLabel()   // catch a "set model …" switch
         default: break
         }
     }
 
     private func onConn(_ c: Bool) {
         icon.contentTintColor = c ? .secondaryLabelColor : .tertiaryLabelColor
+        if c { refreshModelLabel() }
         // Core just came online — fire the query the user typed while it was booting.
         if c, let go = pendingAction, Date() < pendingDeadline {
             pendingAction = nil

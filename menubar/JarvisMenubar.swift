@@ -1057,10 +1057,13 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         try? p.run()
     }
 
+    private let coreLabel = "com.arhancodes.jarviscore"
+
     private func startCore() {
-        let dir = projectDir
-        // JARVIS_NO_MENUBAR=1 → the core won't relaunch (and kill) this menubar.
-        runShell("cd '\(dir)' && JARVIS_NO_MENUBAR=1 nohup npm run dev > /tmp/jarvis-core.log 2>&1 &")
+        // launchd owns the core → it survives this menubar and restarts cleanly.
+        // Bootstrap the agent if it isn't loaded yet, then kickstart it (-k = restart if already up).
+        let plist = "$HOME/Library/LaunchAgents/\(coreLabel).plist"
+        runShell("launchctl bootstrap gui/$(id -u) \(plist) 2>/dev/null; launchctl kickstart -k gui/$(id -u)/\(coreLabel)")
         bootingUntil = Date().addingTimeInterval(25)
         statusItem?.button?.appearsDisabled = false
         reactorView.menu?.item(withTag: 120)?.title = "Starting\u{2026}"
@@ -1068,8 +1071,8 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
     }
 
     private func stopCore() {
-        // Kill the dev process (tsx bin/jarvis.ts) and free the watch port.
-        runShell("pkill -f 'bin/jarvis.ts'; lsof -ti tcp:5225 | xargs kill 2>/dev/null; true")
+        // Stop the launchd job; belt-and-suspenders kill for any stray dev process + port.
+        runShell("launchctl kill SIGTERM gui/$(id -u)/\(coreLabel) 2>/dev/null; pkill -f 'bin/jarvis.ts' 2>/dev/null; lsof -ti tcp:5225 | xargs kill 2>/dev/null; true")
         bootingUntil = Date.distantPast
         isOnline = false
         statusItem?.button?.appearsDisabled = true

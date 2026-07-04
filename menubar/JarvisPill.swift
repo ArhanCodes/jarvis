@@ -23,6 +23,7 @@ final class JarvisLink {
     var onToken: ((String) -> Void)?
     var onStatus: ((String) -> Void)?
     var onConn: ((Bool) -> Void)?
+    var onBuild: ((String, [String: Any]) -> Void)?   // buildStart / buildTool / buildToolErr / buildDone
 
     func connect() {
         task?.cancel(with: .goingAway, reason: nil)
@@ -82,6 +83,8 @@ final class JarvisLink {
             if let s = obj["state"] as? String { DispatchQueue.main.async { self.onStatus?(s) } }
         case "error":
             if let m = obj["message"] as? String { DispatchQueue.main.async { self.onToken?("\n⚠︎ \(m)") } }
+        case "buildStart", "buildTool", "buildToolErr", "buildDone":
+            DispatchQueue.main.async { self.onBuild?(type, obj) }
         default:
             break
         }
@@ -215,6 +218,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         link.onToken = { [weak self] t in self?.appendToken(t) }
         link.onStatus = { [weak self] s in self?.onStatus(s) }
         link.onConn = { [weak self] c in self?.onConn(c) }
+        link.onBuild = { [weak self] kind, obj in self?.onBuildEvent(kind, obj) }
         link.connect()
         showPill()
 
@@ -270,6 +274,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             CGWarpMouseCursorPosition(CGPoint(x: s.frame.maxX - 2, y: s.frame.height * 0.55))
         }
         showPill()
+        // Tuck the pill right under the menu bar so the recording is one compact
+        // strip: menu bar + pill, nothing else. (Normal ⌥-Space opens re-center it.)
+        if let s = NSScreen.main {
+            let f = panel.frame
+            panel.setFrameOrigin(NSPoint(x: f.origin.x, y: s.visibleFrame.maxY - f.height - 6))
+        }
         var delay: Double = 1.2
         for cmd in cmds {
             let typeStart = delay
@@ -288,12 +298,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             }
             delay = submitAt + 4.5   // let the answer stream before the next command
         }
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 1.5) { [weak self] in
-            self?.hidePill()
-        }
-        // Keep the stage up 6s past the pill so the menubar segment can play on it.
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay + 7.5) { [weak self] in
-            self?.hideDemoBackdrop()
+        // Builds run for minutes and end via buildDone — leave the pill and stage
+        // up; onBuildEvent tears the stage down when the build finishes.
+        let hasBuild = cmds.contains { $0.lowercased().hasPrefix("build ") }
+        if !hasBuild {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay + 1.5) { [weak self] in
+                self?.hidePill()
+            }
+            // Keep the stage up well past the pill so the menubar segment plays on it.
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay + 13.0) { [weak self] in
+                self?.hideDemoBackdrop()
+            }
         }
     }
 
@@ -560,6 +575,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         expanded = false
         stopThinking()
         pendingAction = nil
+        if buildMode { buildMode = false; refreshModelLabel() }
         clearPendingImage()
         divider.isHidden = true
         answerScroll.isHidden = true
@@ -762,13 +778,63 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         fireOrQueue { [weak self] in self?.link.send(q) }
     }
 
+    private var buildMode = false
+
     private func appendToken(_ t: String) {
         if awaitingFirstToken { stopThinking() }   // first token in → drop the dots
         answerView.textStorage?.append(NSAttributedString(
             string: t,
-            attributes: [.foregroundColor: NSColor.labelColor,
-                         .font: NSFont.systemFont(ofSize: 15)]))
+            attributes: buildMode
+                ? [.foregroundColor: NSColor.labelColor,
+                   .font: NSFont.monospacedSystemFont(ofSize: 12.5, weight: .regular)]
+                : [.foregroundColor: NSColor.labelColor,
+                   .font: NSFont.systemFont(ofSize: 15)]))
         answerView.scrollToEndOfDocument(nil)
+    }
+
+    // MARK: build transcript (Claude Code feel: mono, ⏺ tool lines, footer)
+    private func appendBuild(_ text: String, color: NSColor, weight: NSFont.Weight = .regular) {
+        if awaitingFirstToken { stopThinking() }
+        answerView.textStorage?.append(NSAttributedString(
+            string: text,
+            attributes: [.foregroundColor: color,
+                         .font: NSFont.monospacedSystemFont(ofSize: 12.5, weight: weight)]))
+        answerView.scrollToEndOfDocument(nil)
+    }
+
+    private func onBuildEvent(_ kind: String, _ obj: [String: Any]) {
+        switch kind {
+        case "buildStart":
+            buildMode = true
+            expand()
+            answerView.string = ""
+            modelLabel.stringValue = (obj["model"] as? String) ?? "fable 5"
+            let task = (obj["task"] as? String) ?? ""
+            appendBuild("⏺ build · \(modelLabel.stringValue)\n", color: .secondaryLabelColor, weight: .semibold)
+            appendBuild("  \(task)\n\n", color: .tertiaryLabelColor)
+            startThinking()
+        case "buildTool":
+            appendBuild("⏺ \(( obj["text"] as? String) ?? "")\n", color: .secondaryLabelColor)
+        case "buildToolErr":
+            appendBuild("⏺ \(( obj["text"] as? String) ?? "")\n", color: .systemRed)
+        case "buildDone":
+            stopThinking()
+            streaming = false
+            if (obj["ok"] as? Bool) == true {
+                let steps = (obj["steps"] as? Int).map(String.init) ?? "?"
+                let dir = (obj["dir"] as? String) ?? ""
+                appendBuild("\n✔ done · \(steps) steps\n", color: .labelColor, weight: .semibold)
+                appendBuild("  \(dir)\n", color: .secondaryLabelColor)
+            } else {
+                let err = (obj["error"] as? String) ?? "build did not finish"
+                appendBuild("\n✖ \(err)\n", color: .systemRed, weight: .semibold)
+            }
+            buildMode = false
+            refreshModelLabel()   // restore the conversation model tag
+            hideDemoBackdrop()    // demo stage (if any) comes down with the build
+        default:
+            break
+        }
     }
 
     private func onStatus(_ s: String) {

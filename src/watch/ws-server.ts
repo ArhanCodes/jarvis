@@ -237,21 +237,27 @@ async function handleVision(ws: WebSocket, prompt: string, image: string, mediaT
   }
 }
 
-// Claude Code-style autonomous build. Streams the agent's narration + tool
-// activity to the pill token-by-token; no TTS (builds run for minutes).
+// Claude Code-style autonomous build. Streams typed events so the pill can
+// render a Claude Code-like transcript (mono font, ⏺ tool lines, summary
+// footer); no TTS (builds run for minutes).
 async function handleBuild(ws: WebSocket, description: string): Promise<void> {
   // handleCommand already broadcast a 'processing' status before routing here.
+  const send = (obj: Record<string, unknown>) => { if (ws.readyState === WebSocket.OPEN) sendJSON(ws, obj); };
   try {
+    send({ type: 'buildStart', task: description, model: 'fable 5' });
     const res = await runBuild(description, {
-      onText: (t) => { if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: t }); },
-      onEvent: (e) => { if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: `\n· ${e.text}\n` }); },
+      onText: (t) => send({ type: 'token', text: t }),
+      onEvent: (e) => send({ type: e.kind === 'tool-error' ? 'buildToolErr' : 'buildTool', text: e.text }),
     });
-    const tail = res.ok
-      ? `\n\n✅ Built in ${res.projectDir}\n   ${res.steps} steps · ${res.usedModel.replace('claude-', '')}`
-      : `\n\n⚠️ ${res.summary}`;
-    if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: tail });
+    send({
+      type: 'buildDone',
+      ok: res.ok,
+      dir: res.projectDir.replace(process.env.HOME || '', '~'),
+      steps: res.steps,
+      model: res.usedModel.replace('claude-', '').replace(/-/g, ' '),
+    });
   } catch (err) {
-    if (ws.readyState === WebSocket.OPEN) sendJSON(ws, { type: 'token', text: `\n\n⚠️ Build failed: ${(err as Error).message}` });
+    send({ type: 'buildDone', ok: false, error: (err as Error).message });
   } finally {
     for (const client of activeClients) sendJSON(client, { type: 'status', state: 'idle' });
   }

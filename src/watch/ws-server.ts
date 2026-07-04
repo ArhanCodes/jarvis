@@ -33,6 +33,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import { configPath } from '../utils/config.js';
 import { createLogger } from '../utils/logger.js';
+import { reportCommand } from '../utils/status-reporter.js';
 
 const execAsync = promisify(exec);
 const log = createLogger('ws-server');
@@ -265,6 +266,9 @@ async function handleBuild(ws: WebSocket, description: string): Promise<void> {
 
 async function handleCommand(ws: WebSocket, text: string, requestId: string, noAudio: boolean = false, playOnMac: boolean = false): Promise<void> {
   console.log(`  [watch] Command: "${text}" (noAudio=${noAudio}, playOnMac=${playOnMac})`);
+  // Feed the menubar's RECENT list — without this, pill/watch commands never
+  // show up there (only the terminal REPL and voice paths reported).
+  reportCommand(text);
 
   // Broadcast status to ALL clients so Mac menubar sees it too
   for (const client of activeClients) {

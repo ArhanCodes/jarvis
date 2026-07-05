@@ -91,7 +91,7 @@ async function generateTTSAudio(text: string): Promise<Buffer | null> {
         },
         body: JSON.stringify({
           text,
-          model_id: vc.elevenlabs.model || 'eleven_multilingual_v2',
+          model_id: vc.elevenlabs.model || 'eleven_turbo_v2_5',
           voice_settings: { stability: 0.4, similarity_boost: 0.8, style: 0.15 },
         }),
       });
@@ -185,7 +185,7 @@ async function playAudioOnMac(text: string): Promise<void> {
         },
         body: JSON.stringify({
           text,
-          model_id: vc.elevenlabs.model || 'eleven_multilingual_v2',
+          model_id: vc.elevenlabs.model || 'eleven_turbo_v2_5',
           voice_settings: { stability: 0.4, similarity_boost: 0.8, style: 0.15 },
         }),
       });

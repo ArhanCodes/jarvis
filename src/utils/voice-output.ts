@@ -183,7 +183,7 @@ async function speakElevenLabs(text: string): Promise<boolean> {
   const voiceId = config.elevenlabs?.voiceId;
   if (!apiKey || !voiceId) return false;
 
-  const model = config.elevenlabs?.model || 'eleven_multilingual_v2';
+  const model = config.elevenlabs?.model || 'eleven_turbo_v2_5';
   const tmpFile = join(tmpdir(), `jarvis-tts-${Date.now()}.mp3`);
 
   try {
@@ -317,7 +317,7 @@ async function generateElevenLabsAudio(text: string): Promise<Buffer | null> {
   const voiceId = config.elevenlabs?.voiceId;
   if (!apiKey || !voiceId) return null;
 
-  const model = config.elevenlabs?.model || 'eleven_multilingual_v2';
+  const model = config.elevenlabs?.model || 'eleven_turbo_v2_5';
 
   try {
     const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {

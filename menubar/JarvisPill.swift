@@ -97,6 +97,15 @@ final class JarvisLink {
         task?.send(.string(str)) { _ in }
     }
 
+    // Same as send() but asks the core to speak the reply aloud on this Mac
+    // (playOnMac → the core's TTS, currently ElevenLabs flash).
+    func sendSpoken(_ query: String) {
+        let payload: [String: Any] = ["type": "command", "text": query, "noAudio": false, "playOnMac": true]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload),
+              let str = String(data: data, encoding: .utf8) else { return }
+        task?.send(.string(str)) { _ in }
+    }
+
     func sendVision(_ query: String, image: String, mediaType: String = "image/png") {
         let payload: [String: Any] = ["type": "vision", "text": query, "image": image, "mediaType": mediaType]
         guard let data = try? JSONSerialization.data(withJSONObject: payload),
@@ -187,6 +196,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private var field: NSTextField!
     private var icon: NSImageView!
     private var modelLabel: NSTextField!   // dim active-model tag on the right
+    private var speakerBtn: NSButton!      // toggle: read replies aloud
+    private var speakReplies = UserDefaults.standard.bool(forKey: "jarvis.speakReplies")
+    private var speakOnce = false          // mic queries always speak back, one-shot
     private var divider: NSBox!
     private var answerScroll: NSScrollView!
     private var answerView: NSTextView!
@@ -383,6 +395,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         modelLabel.setContentCompressionResistancePriority(.required, for: .horizontal)
         searchHost.addSubview(modelLabel)
 
+        // Speaker toggle — read replies aloud (dim when off, accent when on).
+        speakerBtn = NSButton()
+        speakerBtn.translatesAutoresizingMaskIntoConstraints = false
+        speakerBtn.isBordered = false
+        speakerBtn.bezelStyle = .regularSquare
+        speakerBtn.imagePosition = .imageOnly
+        speakerBtn.target = self
+        speakerBtn.action = #selector(toggleSpeak)
+        speakerBtn.setContentHuggingPriority(.required, for: .horizontal)
+        searchHost.addSubview(speakerBtn)
+        updateSpeakerGlyph()
+
         divider = NSBox()
         divider.boxType = .separator
         divider.translatesAutoresizingMaskIntoConstraints = false
@@ -447,8 +471,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             icon.heightAnchor.constraint(equalToConstant: 22),
 
             field.leadingAnchor.constraint(equalTo: icon.trailingAnchor, constant: 10),
-            field.trailingAnchor.constraint(equalTo: modelLabel.leadingAnchor, constant: -8),
+            field.trailingAnchor.constraint(equalTo: speakerBtn.leadingAnchor, constant: -10),
             field.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
+
+            speakerBtn.trailingAnchor.constraint(equalTo: modelLabel.leadingAnchor, constant: -10),
+            speakerBtn.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
+            speakerBtn.widthAnchor.constraint(equalToConstant: 18),
+            speakerBtn.heightAnchor.constraint(equalToConstant: 18),
 
             modelLabel.trailingAnchor.constraint(equalTo: searchHost.trailingAnchor, constant: -18),
             modelLabel.centerYAnchor.constraint(equalTo: icon.centerYAnchor),
@@ -636,7 +665,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     private func runInstant(_ command: String) {
         expand()
         answerView.string = ""
-        fireOrQueue { [weak self] in self?.link.send(command) }
+        fireOrQueue { [weak self] in self?.deliver(command) }
     }
 
     // Run the send now if connected; otherwise queue it and fire the moment the
@@ -686,7 +715,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
             let data = pipe.fileHandleForReading.readDataToEndOfFile()
             let text = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             DispatchQueue.main.async {
-                if !text.isEmpty { self.field.stringValue = text; self.submit() }
+                // Voice in → voice out: a mic query always speaks its reply back.
+                if !text.isEmpty { self.speakOnce = true; self.field.stringValue = text; self.submit() }
             }
         }
     }
@@ -775,7 +805,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         setPlaceholder("Search")
         expand()
         answerView.string = ""
-        fireOrQueue { [weak self] in self?.link.send(q) }
+        fireOrQueue { [weak self] in self?.deliver(q) }
     }
 
     private var buildMode = false
@@ -842,6 +872,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         case "idle": streaming = false; stopThinking(); refreshModelLabel()   // catch a "set model …" switch
         default: break
         }
+    }
+
+    // MARK: speak replies
+    @objc private func toggleSpeak() {
+        speakReplies.toggle()
+        UserDefaults.standard.set(speakReplies, forKey: "jarvis.speakReplies")
+        updateSpeakerGlyph()
+        panel.makeFirstResponder(field)
+    }
+
+    private func updateSpeakerGlyph() {
+        let name = speakReplies ? "speaker.wave.2.fill" : "speaker.slash.fill"
+        let cfg = NSImage.SymbolConfiguration(pointSize: 12, weight: .regular)
+        speakerBtn.image = NSImage(systemSymbolName: name, accessibilityDescription: "Speak replies")?
+            .withSymbolConfiguration(cfg)
+        speakerBtn.contentTintColor = speakReplies ? .controlAccentColor : .tertiaryLabelColor
+        speakerBtn.toolTip = speakReplies ? "Speaking replies aloud (click to mute)" : "Replies are silent (click to speak aloud)"
+    }
+
+    // Send a command, spoken aloud when the toggle is on or a mic query is in flight.
+    private func deliver(_ q: String) {
+        if speakReplies || speakOnce { speakOnce = false; link.sendSpoken(q) }
+        else { link.send(q) }
     }
 
     private func onConn(_ c: Bool) {

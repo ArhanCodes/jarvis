@@ -486,6 +486,8 @@ export function boot(): void {
 
     const cleanup = () => {
       clearInterval(keepAlive);
+      voiceAssistant?.stop();   // kill the speech daemon too — otherwise it
+      stopWatchServer();        // orphans and keeps corespeechd's models hot
       scheduler.stopAll();
       stopBreachMonitor();
       stopNetworkGuardian();

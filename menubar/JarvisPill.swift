@@ -18,6 +18,7 @@ final class JarvisLink {
     private var task: URLSessionWebSocketTask?
     private let url = URL(string: "ws://127.0.0.1:5225")!
     private var reconnectWork: DispatchWorkItem?
+    private var reconnectDelay: Double = 1.0   // backs off to 6s while the core is off
     private(set) var connected = false
 
     var onToken: ((String) -> Void)?
@@ -35,6 +36,7 @@ final class JarvisLink {
     }
 
     private func setConnected(_ v: Bool) {
+        if v { reconnectDelay = 1.0 }   // snappy again once the core is back
         if connected != v {
             connected = v
             DispatchQueue.main.async { self.onConn?(v) }
@@ -46,7 +48,17 @@ final class JarvisLink {
         reconnectWork?.cancel()
         let w = DispatchWorkItem { [weak self] in self?.connect() }
         reconnectWork = w
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: w)
+        DispatchQueue.main.asyncAfter(deadline: .now() + reconnectDelay, execute: w)
+        reconnectDelay = min(reconnectDelay * 1.6, 6.0)
+    }
+
+    // Called when the user opens the pill — retry NOW instead of waiting out
+    // the backoff, so "Turn on JARVIS" + ⌥-Space feels instant.
+    func nudge() {
+        guard !connected else { return }
+        reconnectDelay = 1.0
+        reconnectWork?.cancel()
+        connect()
     }
 
     private func ping() {
@@ -539,6 +551,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
 
     func showPill() {
         collapse()
+        link.nudge()   // if disconnected, retry immediately rather than waiting out the backoff
         refreshModelLabel()
         positionTopCenter()
         NSApp.activate(ignoringOtherApps: true)

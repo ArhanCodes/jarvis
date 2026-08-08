@@ -857,17 +857,14 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
             name: NSNotification.Name("com.arhancodes.jarvis.demo.menubar"),
             object: nil, suspensionBehavior: .deliverImmediately)
 
-        // Animation: ~30fps — drives both widget and fullscreen orb
-        animTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
-            let dt: CGFloat = 1.0 / 30.0
-            self?.reactorView.tick(dt: dt)
-            self?.orbView?.tick(dt: dt)
-        }
+        // Animation timer intentionally NOT started here. The floating widget is
+        // parked (never shown), so a perpetual 30fps timer was pure CPU waste —
+        // it now runs only while the fullscreen orb is open (see openFullScreen).
 
-        // Poll status + keep widget visible
-        pollTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+        // Poll status. 2s is plenty for a menu + icon dim state and keeps the
+        // idle footprint near zero when JARVIS is off.
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
             self?.pollStatus()
-            // (floating widget parked — nothing to re-assert; the status item persists)
         }
 
         // Local Escape monitor (works when app is active)
@@ -914,6 +911,14 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         orbView = orbV
         isFullScreenOpen = true
 
+        // Drive the orb at 30fps only while it's actually on screen.
+        animTimer?.invalidate()
+        animTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 30.0, repeats: true) { [weak self] _ in
+            let dt: CGFloat = 1.0 / 30.0
+            self?.reactorView.tick(dt: dt)
+            self?.orbView?.tick(dt: dt)
+        }
+
         // Global Escape monitor — catches Escape even if app loses focus
         globalEscMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if event.keyCode == 53 && self?.isFullScreenOpen == true {
@@ -940,6 +945,8 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         fullScreenWindow = nil
         orbView = nil
         isFullScreenOpen = false
+        animTimer?.invalidate()
+        animTimer = nil   // no orb on screen → no animation work at all
 
         // (floating widget parked — the menu-bar status item is the running indicator)
         // window.orderFront(nil)
@@ -1099,8 +1106,10 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
     }
 
     private func stopCore() {
-        // Stop the launchd job; belt-and-suspenders kill for any stray dev process + port.
-        runShell("launchctl kill SIGTERM gui/$(id -u)/\(coreLabel) 2>/dev/null; pkill -f 'bin/jarvis.ts' 2>/dev/null; lsof -ti tcp:5225 | xargs kill 2>/dev/null; true")
+        // Stop the launchd job; belt-and-suspenders kill for any stray dev process,
+        // the watch port, the always-on voice daemon (feeds corespeechd's memory),
+        // and the Rust sidecar. Turn off means OFF — nothing JARVIS left running.
+        runShell("launchctl kill SIGTERM gui/$(id -u)/\(coreLabel) 2>/dev/null; sleep 1; pkill -f 'bin/jarvis.ts' 2>/dev/null; pkill -f '.voice/voice-daemon' 2>/dev/null; lsof -ti tcp:5225 | xargs kill 2>/dev/null; lsof -ti tcp:7700 | xargs kill 2>/dev/null; true")
         bootingUntil = Date.distantPast
         isOnline = false
         statusItem?.button?.appearsDisabled = true

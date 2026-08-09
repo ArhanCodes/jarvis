@@ -1093,12 +1093,20 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
     }
 
     private let coreLabel = "com.arhancodes.jarviscore"
+    private let pillLabel = "com.arhancodes.jarvispill"
 
     private func startCore() {
         // launchd owns the core → it survives this menubar and restarts cleanly.
         // Bootstrap the agent if it isn't loaded yet, then kickstart it (-k = restart if already up).
-        let plist = "$HOME/Library/LaunchAgents/\(coreLabel).plist"
-        runShell("launchctl bootstrap gui/$(id -u) \(plist) 2>/dev/null; launchctl kickstart -k gui/$(id -u)/\(coreLabel)")
+        let corePlist = "$HOME/Library/LaunchAgents/\(coreLabel).plist"
+        let pillPlist = "$HOME/Library/LaunchAgents/\(pillLabel).plist"
+        // The ⌥-Space pill only exists while JARVIS is on — start it with the core.
+        runShell("""
+            launchctl bootstrap gui/$(id -u) \(corePlist) 2>/dev/null; \
+            launchctl kickstart -k gui/$(id -u)/\(coreLabel); \
+            launchctl bootstrap gui/$(id -u) \(pillPlist) 2>/dev/null; \
+            launchctl kickstart -k gui/$(id -u)/\(pillLabel)
+            """)
         bootingUntil = Date().addingTimeInterval(25)
         statusItem?.button?.appearsDisabled = false
         reactorView.menu?.item(withTag: 120)?.title = "Starting\u{2026}"
@@ -1109,7 +1117,17 @@ class JarvisOverlayApp: NSObject, NSApplicationDelegate, ReactorClickDelegate, F
         // Stop the launchd job; belt-and-suspenders kill for any stray dev process,
         // the watch port, the always-on voice daemon (feeds corespeechd's memory),
         // and the Rust sidecar. Turn off means OFF — nothing JARVIS left running.
-        runShell("launchctl kill SIGTERM gui/$(id -u)/\(coreLabel) 2>/dev/null; sleep 1; pkill -f 'bin/jarvis.ts' 2>/dev/null; pkill -f '.voice/voice-daemon' 2>/dev/null; lsof -ti tcp:5225 | xargs kill 2>/dev/null; lsof -ti tcp:7700 | xargs kill 2>/dev/null; true")
+        runShell("""
+            launchctl kill SIGTERM gui/$(id -u)/\(coreLabel) 2>/dev/null; \
+            launchctl kill SIGTERM gui/$(id -u)/\(pillLabel) 2>/dev/null; \
+            sleep 1; \
+            pkill -f 'bin/jarvis.ts' 2>/dev/null; \
+            pkill -f '.voice/voice-daemon' 2>/dev/null; \
+            pkill -f 'JarvisPill.app' 2>/dev/null; \
+            lsof -ti tcp:5225 | xargs kill 2>/dev/null; \
+            lsof -ti tcp:7700 | xargs kill 2>/dev/null; \
+            true
+            """)
         bootingUntil = Date.distantPast
         isOnline = false
         statusItem?.button?.appearsDisabled = true

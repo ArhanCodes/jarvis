@@ -244,7 +244,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
         link.onConn = { [weak self] c in self?.onConn(c) }
         link.onBuild = { [weak self] kind, obj in self?.onBuildEvent(kind, obj) }
         link.connect()
-        showPill()
+        // Only greet the user with the pill if JARVIS is actually on. When the
+        // process is started for any other reason (deploy, manual .app launch),
+        // stay hidden — the menu bar is the only switch.
+        if coreIsUp() { showPill() }
 
         // Demo hook: `runDemo` types and submits a scripted sequence so the pill
         // can demo itself for screen recordings. Local-only trigger:
@@ -547,7 +550,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSTextFieldDelegate {
     }
 
     // MARK: show / hide
-    func togglePill() { panel.isVisible ? hidePill() : showPill() }
+    // ⌥-Space is inert unless JARVIS is actually on. The pill process may be
+    // alive for other reasons (a deploy kickstart, someone opening the .app),
+    // so gate on the CORE being reachable rather than on our own existence.
+    private func coreIsUp() -> Bool {
+        if link.connected { return true }
+        // Socket may not have reconnected yet — trust a fresh status file with a live pid.
+        guard let data = FileManager.default.contents(atPath: "/tmp/jarvis-status.json"),
+              let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let pid = obj["pid"] as? Int else { return false }
+        return kill(pid_t(pid), 0) == 0
+    }
+
+    func togglePill() {
+        guard coreIsUp() else { return }   // JARVIS off → hotkey does nothing
+        panel.isVisible ? hidePill() : showPill()
+    }
 
     func showPill() {
         collapse()
